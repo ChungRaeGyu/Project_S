@@ -1,0 +1,46 @@
+{
+    "version": 1,
+    "name": "AnyKey",
+    "maps": [
+        {
+            "name": "KeyBoardMouse",
+            "id": "59824230-dc70-4cb4-b341-c31e65bf677a",
+            "actions": [
+                {
+                    "name": "AnykeyStart",
+                    "type": "Button",
+                    "id": "1e3ca3cf-6e0a-4add-9ff4-f38744a8291c",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "6f7b303c-2ad8-410d-a661-5f1d82fb8926",
+                    "path": "<Keyboard>/anyKey",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "AnykeyStart",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b0db02cc-3af1-4e02-aa34-a052a543e9d9",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "AnykeyStart",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
