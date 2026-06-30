@@ -1,13 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
+using Photon.Realtime;
 
 /// <summary>
-/// 씬 로드 시 건물들을 순서대로 생성하는 스크립트.
+/// 씬 로드 시 마스터 클라이언트만 건물을 생성합니다.
+/// 클라이언트는 PhotonNetwork.Instantiate 동기화로 자동 수신합니다.
 /// 순서: StartRoom -> [Piece -> ShopRoom -> ReadyRoom] x N -> Piece -> EndRoom
-/// 모든 프리팹은 Resources 폴더 안에 있어야 합니다.
 /// </summary>
-public class RoomGenerator : MonoBehaviour
+public class RoomGenerator : MonoBehaviourPunCallbacks
 {
     [Header("Resources 폴더 내 프리팹 이름")]
     [SerializeField] private string startRoomName = "StartRoom";
@@ -18,26 +20,39 @@ public class RoomGenerator : MonoBehaviour
     [Header("Piece 반복 횟수 (마지막 Piece 뒤에는 Shop/Ready 없음)")]
     [SerializeField] private int pieceCount = 3;
 
-    // Piece 프리팹 이름 목록
-    private readonly string[] pieceNames = { "Piece001", "Piece002", "Piece003" };
+    [Header("Piece 프리팹 이름 목록 (Inspector에서 추가/삭제 가능)")]
+    [SerializeField] private string[] pieceNames = { "Piece0", "Piece1", "Piece2" }; // [변경] private readonly -> SerializeField
 
     [Header("건물 간 간격")]
     [SerializeField] private float padding = 1f;
 
-    // 현재까지 누적된 X 위치
     private float currentX = 0f;
-
-    // 생성된 오브젝트 목록 (씬 재시작 시 정리용)
     private readonly List<GameObject> spawnedObjects = new List<GameObject>();
 
+    // [변경] 방 생성 순서를 나타내는 전역 카운터 (0부터 시작, 모든 방 종류 포함)
+    private int stepIndex = 0;
+
+    // [변경] 어떤 Piece가 몇 라운드에 해당하는지 RoundManager에 알리기 위한 매핑
+    // key: 라운드 번호(1부터), value: 해당 Piece의 stepIndex
+    private readonly Dictionary<int, int> roundToPieceStep = new Dictionary<int, int>();
+
     // -----------------------------------------------
-    // 씬 로드 시 자동 실행
+    // 씬 로드 시 자동 실행 - 마스터만 생성
     // -----------------------------------------------
     private void Start()
     {
+        if (!PhotonNetwork.IsMasterClient) return;
+
         ClearSpawned();
         currentX = 0f;
+        stepIndex = 0;            // [변경]
+        roundToPieceStep.Clear(); // [변경]
         StartCoroutine(GenerateRooms());
+    }
+
+    public override void OnMasterClientSwitched(Player newMasterClient)
+    {
+        Debug.Log($"[RoomGenerator] 새 마스터: {newMasterClient.NickName}");
     }
 
     // -----------------------------------------------
@@ -45,42 +60,42 @@ public class RoomGenerator : MonoBehaviour
     // -----------------------------------------------
     private IEnumerator GenerateRooms()
     {
-        // 1) StartRoom - 원점(0,0,0)에 생성
-        yield return StartCoroutine(SpawnBuilding(startRoomName, isFirst: true, doorType: DoorType.Start)); // [변경]
+        yield return StartCoroutine(SpawnBuilding(startRoomName, isFirst: true, doorType: DoorType.Start));
 
-        // 2) Piece -> ShopRoom -> ReadyRoom 반복
-        //    마지막 Piece 뒤에는 ShopRoom/ReadyRoom 대신 EndRoom 생성
         List<string> selectedPieces = GetRandomPieces(pieceCount);
         for (int i = 0; i < selectedPieces.Count; i++)
         {
-            // Piece 생성 후 DoorManager에 등록
+            int roundNumber = i + 1; // [변경] 이 Piece가 몇 라운드인지
+
             yield return StartCoroutine(SpawnBuilding(selectedPieces[i], doorType: DoorType.Piece));
+
+            // [변경] 방금 생성한 Piece의 stepIndex를 라운드 번호와 매핑
+            roundToPieceStep[roundNumber] = stepIndex - 1;
 
             bool isLastPiece = (i == selectedPieces.Count - 1);
             if (!isLastPiece)
             {
-                // [변경] ShopRoom, ReadyRoom도 DoorManager에 등록
                 yield return StartCoroutine(SpawnBuilding(shopRoomName, doorType: DoorType.Shop));
                 yield return StartCoroutine(SpawnBuilding(readyRoomName, doorType: DoorType.Ready));
             }
             else
             {
-                // 마지막 Piece 뒤에는 EndRoom
                 yield return StartCoroutine(SpawnBuilding(endRoomName));
             }
         }
 
+        // [변경] RoundManager에 매핑 정보 전달
+        if (RoundManager.Instance != null)
+            RoundManager.Instance.SetRoundPieceStepMap(roundToPieceStep);
+
         Debug.Log("[RoomGenerator] 모든 건물 생성 완료.");
     }
 
-    // -----------------------------------------------
-    // 문 종류 구분용 열거형
-    // [변경] Piece 외에 Shop, Ready 타입 추가
-    // -----------------------------------------------
-    private enum DoorType { None, Start, Piece, Shop, Ready } // [변경] Start 추가
+    private enum DoorType { None, Start, Piece, Shop, Ready }
 
     // -----------------------------------------------
-    // 건물 하나를 생성하고 배치하는 함수
+    // 건물 생성 후 DoorManager 등록은 마스터만 처리
+    // [변경] DoorManager 등록을 마스터에서만 하도록 제한
     // -----------------------------------------------
     private IEnumerator SpawnBuilding(string prefabName, bool isFirst = false, DoorType doorType = DoorType.None)
     {
@@ -96,45 +111,50 @@ public class RoomGenerator : MonoBehaviour
         float spawnX;
         if (isFirst)
         {
-            // 첫 번째 건물은 중심을 원점에 맞춤
             spawnX = 0f;
             currentX = prefabWidth * 0.5f;
         }
         else
         {
-            // 이전 건물 오른쪽 끝 + 간격 + 현재 건물 절반 너비
             spawnX = currentX + padding + prefabWidth * 0.5f;
             currentX = spawnX + prefabWidth * 0.5f;
         }
 
         Vector3 spawnPos = new Vector3(spawnX, 0f, 0f);
-        GameObject obj = Instantiate(prefab, spawnPos, Quaternion.identity);
+        GameObject obj = PhotonNetwork.Instantiate(prefabName, spawnPos, Quaternion.identity);
 
         if (obj != null)
         {
             spawnedObjects.Add(obj);
 
-            // [변경] 문 종류에 따라 DoorManager에 등록
+            // 문 종류에 따라 DoorManager에 등록 (PieceDoor를 찾아서 전달)
             if (DoorManager.Instance != null)
             {
-                if (doorType == DoorType.Start) DoorManager.Instance.RegisterStartDoor(obj); // [변경]
-                if (doorType == DoorType.Piece) DoorManager.Instance.RegisterPieceDoor(obj);
-                if (doorType == DoorType.Shop) DoorManager.Instance.RegisterShopDoor(obj);
-                if (doorType == DoorType.Ready) DoorManager.Instance.RegisterReadyDoor(obj);
+                PieceDoor door = obj.GetComponentInChildren<PieceDoor>();
+                if (door != null)
+                {
+                    if (doorType == DoorType.Start) DoorManager.Instance.RegisterStartDoor(door);
+                    if (doorType == DoorType.Piece) DoorManager.Instance.RegisterPieceDoor(door);
+                    if (doorType == DoorType.Shop) DoorManager.Instance.RegisterShopDoor(door);
+                    if (doorType == DoorType.Ready) DoorManager.Instance.RegisterReadyDoor(door);
+                }
             }
 
-            Debug.Log($"[RoomGenerator] '{prefabName}' 생성 완료 | 위치: {spawnPos} | 너비: {prefabWidth:F2}");
+            // [변경] RoomTrigger에 이 방의 순서 번호(stepIndex) 부여
+            RoomTrigger trigger = obj.GetComponentInChildren<RoomTrigger>();
+            if (trigger != null)
+                trigger.SetStepIndex(stepIndex);
+
+            stepIndex++; // [변경] 다음 방을 위해 1 증가
+
+            Debug.Log($"[RoomGenerator] '{prefabName}' 생성 완료 | 위치: {spawnPos} | stepIndex: {stepIndex - 1}");
         }
 
         yield return null;
     }
 
-    // -----------------------------------------------
-    // 프리팹의 X축 너비를 Renderer 또는 Collider로 계산
-    // -----------------------------------------------
     private float GetPrefabWidth(GameObject prefab)
     {
-        // 1순위: Renderer bounds 합산
         Renderer[] renderers = prefab.GetComponentsInChildren<Renderer>();
         if (renderers.Length > 0)
         {
@@ -144,7 +164,6 @@ public class RoomGenerator : MonoBehaviour
             return bounds.size.x;
         }
 
-        // 2순위: Collider bounds 합산
         Collider[] colliders = prefab.GetComponentsInChildren<Collider>();
         if (colliders.Length > 0)
         {
@@ -154,14 +173,10 @@ public class RoomGenerator : MonoBehaviour
             return bounds.size.x;
         }
 
-        // 크기를 감지 못한 경우 기본값 사용
         Debug.LogWarning($"[RoomGenerator] '{prefab.name}': 크기를 감지하지 못해 기본값 10f 사용.");
         return 10f;
     }
 
-    // -----------------------------------------------
-    // Piece 랜덤 선택 (중복 허용)
-    // -----------------------------------------------
     private List<string> GetRandomPieces(int count)
     {
         List<string> result = new List<string>();
@@ -170,29 +185,15 @@ public class RoomGenerator : MonoBehaviour
             int idx = Random.Range(0, pieceNames.Length);
             result.Add(pieceNames[idx]);
         }
-
-        /* -- 중복 없는 랜덤으로 바꾸려면 아래 코드로 교체 --
-        List<string> pool = new List<string>(pieceNames);
-        for (int i = 0; i < count && pool.Count > 0; i++)
-        {
-            int idx = Random.Range(0, pool.Count);
-            result.Add(pool[idx]);
-            pool.RemoveAt(idx);
-        }
-        */
-
         return result;
     }
 
-    // -----------------------------------------------
-    // 생성된 오브젝트 전부 제거 (씬 재시작 등)
-    // -----------------------------------------------
     private void ClearSpawned()
     {
         foreach (GameObject obj in spawnedObjects)
         {
             if (obj != null)
-                Destroy(obj);
+                PhotonNetwork.Destroy(obj);
         }
         spawnedObjects.Clear();
     }
