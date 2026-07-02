@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;          // [변경] TMP 사용
 using Photon.Pun;
 
 /// <summary>
@@ -14,6 +15,10 @@ public class RoundManager : MonoBehaviourPun
     [Header("라운드 설정")]
     [SerializeField] private int totalRounds = 3;
     [SerializeField] private float roundTime = 60f;
+
+    // [변경] 타이머를 표시할 TMP 텍스트 (Inspector에서 연결)
+    [Header("UI")]
+    [SerializeField] private TMP_Text timerText;
 
     public int CurrentRound { get; private set; } = 0;
     public float RemainingTime { get; private set; } = 0f;
@@ -52,8 +57,24 @@ public class RoundManager : MonoBehaviourPun
         {
             RemainingTime = 0f;
             isRunning = false;
+            UpdateTimerText(); // [변경] 0:00 표시 후 종료
             HandleTimeUp();
+            return;
         }
+
+        UpdateTimerText(); // [변경] 매 프레임 텍스트 갱신
+    }
+
+    // -----------------------------------------------
+    // [변경] 남은 시간을 분:초 형식으로 텍스트에 표시
+    // -----------------------------------------------
+    private void UpdateTimerText()
+    {
+        if (timerText == null) return;
+
+        int minutes = Mathf.FloorToInt(RemainingTime / 60f);
+        int seconds = Mathf.FloorToInt(RemainingTime % 60f);
+        timerText.text = $"{minutes:00}:{seconds:00}";
     }
 
     // -----------------------------------------------
