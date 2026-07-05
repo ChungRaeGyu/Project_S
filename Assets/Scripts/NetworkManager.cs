@@ -18,6 +18,10 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             Destroy(gameObject);
         }
     }
+    private void Start()
+    {
+        PhotonNetwork.AutomaticallySyncScene = true;
+    }
     public void ConnectButton()
     {
         PhotonNetwork.ConnectUsingSettings();

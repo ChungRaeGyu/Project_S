@@ -32,6 +32,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Test",
+                    "type": "Button",
+                    "id": "91c2daf6-a224-4064-8942-23746fcfd8dc",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -109,6 +118,17 @@
                     "processors": "",
                     "groups": ";KeyBoardMouse",
                     "action": "Interaction",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "579ff374-3af3-412f-8ec0-883823f3f89f",
+                    "path": "<Keyboard>/tab",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";KeyBoardMouse",
+                    "action": "Test",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

@@ -17,14 +17,26 @@ public class CharacterManager : MonoBehaviour
         characterBehavior = GetComponent<CharacterBehavior>();
         characterLook = GetComponent<CharacterLook>();
         stat = GetComponent<CharacterStat>();
+        characterInput.InputSetting();
 
+    }
+    private void OnEnable()
+    {
+        characterInput.InputOnEnable();
     }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         characterLook.Set();
-        characterInput.InputSetting();
         characterInput.interact += stat.Interact;
+    }
+    private void OnDisable()
+    {
+        characterInput.InputOnDisable();
+    }
+    private void OnDestroy()
+    {
+        characterInput.InputOnDestroy();
     }
 
     // Update is called once per frame

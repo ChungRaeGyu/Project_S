@@ -18,8 +18,26 @@ public class CharacterInput : MonoBehaviour
         inputActions.Character.MouseInput.performed += OnLook;
         inputActions.Character.MouseInput.canceled += OnLook;
         inputActions.Character.Interaction.performed += OnInteraction;
-
+        inputActions.Character.Test.performed += OnTest;
     }
+
+    private void OnTest(InputAction.CallbackContext context)
+    {
+        if (context.phase == InputActionPhase.Performed)
+        {
+            if(Cursor.lockState == CursorLockMode.Locked)
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
+            else
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
+        }
+    }
+
     private void OnInteraction(InputAction.CallbackContext context)
     {
         if(context.phase == InputActionPhase.Performed)
@@ -42,15 +60,15 @@ public class CharacterInput : MonoBehaviour
             MoveInput = Vector2.zero;
         }
     }
-    private void OnEnable()
+    public void InputOnEnable()
     {
         inputActions.Enable();
     }
-    private void OnDisable()
+    public void InputOnDisable()
     {
         inputActions.Disable();
     }
-    private void OnDestroy()
+    public void InputOnDestroy()
     {
         inputActions.Character.Move.performed -= OnMove;
     }
