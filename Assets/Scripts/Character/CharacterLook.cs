@@ -36,4 +36,19 @@ public class CharacterLook : MonoBehaviour
 
         Camera.main.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
     }
+
+/*    private void CheckInteractable()
+    {
+        currentInteractable = null;
+
+        Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+
+        if (Physics.Raycast(ray, out RaycastHit hit, interactDistance, interactLayer))
+        {
+            if (hit.collider.TryGetComponent(out IInteractable interactable))
+            {
+                currentInteractable = interactable;
+            }
+        }
+    }*/
 }

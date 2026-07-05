@@ -32,6 +32,7 @@ public class CharacterManager : MonoBehaviour
     }
     private void OnDisable()
     {
+        if(characterInput != null)
         characterInput.InputOnDisable();
     }
     private void OnDestroy()
