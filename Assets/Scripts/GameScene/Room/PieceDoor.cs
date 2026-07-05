@@ -7,7 +7,7 @@ using Photon.Pun;
 /// Piece, ShopRoom, ReadyRoom, StartRoom 문에 모두 사용 가능한 범용 문 스크립트.
 /// RoomGenerator가 생성 직후 Init()을 호출해 버튼을 연결합니다.
 /// </summary>
-public class PieceDoor : MonoBehaviourPun
+public class PieceDoor : MonoBehaviourPun, IInteractable
 {
     [Header("문 설정")]
     [SerializeField] private float openHeight = 4f;
@@ -109,5 +109,13 @@ public class PieceDoor : MonoBehaviourPun
     {
         if (isOpen || isMoving) return;
         photonView.RPC("RPC_OpenDoor", RpcTarget.AllViaServer);
+    }
+
+    public void OnInteract(GameObject[] obj=null)
+    {
+        Debug.Log($"[PieceDoor] 버튼 클릭됨. isOpen={isOpen} isMoving={isMoving}");
+        if (isOpen || isMoving) return;
+
+        photonView.RPC("RPC_OpenDoor", RpcTarget.AllViaServer); // [변경]
     }
 }
