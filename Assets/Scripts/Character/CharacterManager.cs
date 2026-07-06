@@ -29,6 +29,7 @@ public class CharacterManager : MonoBehaviour
     {
         characterLook.Set();
         characterInput.interact += stat.Interact;
+        characterLook.changeInteractable += stat.ChangeInteractable;
     }
     private void OnDisable()
     {
@@ -44,6 +45,6 @@ public class CharacterManager : MonoBehaviour
     void Update()
     {
         characterBehavior.UpdateCharacter(characterInput.MoveInput);
-        characterLook.Look(characterInput.LookInput);
+        characterLook.UpdateLook(characterInput.LookInput);
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class CharacterLook : MonoBehaviour
@@ -6,8 +7,14 @@ public class CharacterLook : MonoBehaviour
     [SerializeField] private float minXRotation = -70f;
     [SerializeField] private float maxXRotation = 70f;
     private float yRotation;
-
     private float xRotation;
+    private Camera camera;
+
+    [SerializeField] private float interactDistance = 3f;
+    [SerializeField] private LayerMask interactLayer; // Interactable layer
+
+    private Collider currentCollider;
+    public event Action<IInteractable> changeInteractable;
     public void Set()
     {
         Cursor.lockState = CursorLockMode.Locked;
@@ -17,12 +24,17 @@ public class CharacterLook : MonoBehaviour
 
     private void SetCamera()
     {
-        Camera camera = Camera.main;
+        camera = Camera.main;
         camera.transform.SetParent(transform);
         camera.transform.position = transform.position + new Vector3(0, 1, 0);
         camera.transform.rotation = Quaternion.identity;
     }
-    public void Look(Vector2 mouseDelta)
+    public void UpdateLook(Vector2 mouseDelta)
+    {
+        Look(mouseDelta);
+        CheckInteractable();
+    }
+    private void Look(Vector2 mouseDelta)
     {
         float mouseX = mouseDelta.x * mouseSensitivity;
         float mouseY = mouseDelta.y * mouseSensitivity;
@@ -34,21 +46,29 @@ public class CharacterLook : MonoBehaviour
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, minXRotation, maxXRotation);
 
-        Camera.main.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        camera.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
     }
 
-/*    private void CheckInteractable()
+    public void CheckInteractable()
     {
-        currentInteractable = null;
-
-        Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+        Ray ray = new Ray(camera.transform.position, camera.transform.forward);
 
         if (Physics.Raycast(ray, out RaycastHit hit, interactDistance, interactLayer))
         {
-            if (hit.collider.TryGetComponent(out IInteractable interactable))
-            {
-                currentInteractable = interactable;
-            }
+            if (currentCollider == hit.collider) return;
+
+            currentCollider = hit.collider;
+
+            IInteractable interactable = hit.collider.GetComponent<IInteractable>();
+            changeInteractable?.Invoke(interactable);
+
         }
-    }*/
+        else
+        {
+            if(currentCollider ==null) return;
+
+            currentCollider = null;
+            changeInteractable?.Invoke(null);
+        }
+    }
 }
