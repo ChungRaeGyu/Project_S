@@ -168,12 +168,20 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4688813357778417445, guid: 70d19065fe64ece42a07068bda774ceb, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4688813357778417445, guid: 70d19065fe64ece42a07068bda774ceb, type: 3}
       propertyPath: sceneViewId
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 5853395068503488218, guid: 70d19065fe64ece42a07068bda774ceb, type: 3}
       propertyPath: m_Name
       value: Player
+      objectReference: {fileID: 0}
+    - target: {fileID: 9042869623193467675, guid: 70d19065fe64ece42a07068bda774ceb, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
