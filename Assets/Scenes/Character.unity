@@ -292,6 +292,10 @@ PrefabInstance:
       propertyPath: sceneViewId
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4088722633225188865, guid: 7d51cf1a53be395478965fbd9588401a, type: 3}
+      propertyPath: sceneViewId
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4995798899456032273, guid: 7d51cf1a53be395478965fbd9588401a, type: 3}
       propertyPath: m_Name
       value: ShopRoom
