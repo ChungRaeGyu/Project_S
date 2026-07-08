@@ -48,6 +48,7 @@ public class CharacterBehavior : MonoBehaviour
 
     public void GetItem(GameObject item)
     {
+        //아이템키는 E, 상점에서 
         if (stat.equips[1] != null)
         {
             //Items[1]을 버린다.
