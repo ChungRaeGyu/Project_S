@@ -12,11 +12,13 @@ public class CharacterManager : MonoBehaviour
     {
         pv = GetComponent<PhotonView>();
 
-        if (!pv.IsMine) this.enabled = false;
+        //if (!pv.IsMine) this.enabled = false;
         characterInput = GetComponent<CharacterInput>();
         characterBehavior = GetComponent<CharacterBehavior>();
         characterLook = GetComponent<CharacterLook>();
         stat = GetComponent<CharacterStat>();
+
+        characterBehavior.Init(stat);
         characterInput.InputSetting();
 
     }
@@ -29,9 +31,14 @@ public class CharacterManager : MonoBehaviour
     {
         characterLook.Set();
         characterInput.interact += stat.Interact;
+        characterLook.changeInteractable += stat.ChangeInteractable;
+
+        characterInput.OnMouseButton += characterBehavior.OnMouseButton;
+        
     }
     private void OnDisable()
     {
+        if(characterInput != null)
         characterInput.InputOnDisable();
     }
     private void OnDestroy()
@@ -43,6 +50,6 @@ public class CharacterManager : MonoBehaviour
     void Update()
     {
         characterBehavior.UpdateCharacter(characterInput.MoveInput);
-        characterLook.Look(characterInput.LookInput);
+        characterLook.UpdateLook(characterInput.LookInput);
     }
 }

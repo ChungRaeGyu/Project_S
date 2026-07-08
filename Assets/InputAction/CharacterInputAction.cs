@@ -127,6 +127,15 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ItemUse"",
+                    ""type"": ""Button"",
+                    ""id"": ""efdde666-e1cd-4ffc-a240-e896f7b18030"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -217,6 +226,28 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
                     ""action"": ""Test"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""4fee363f-41c0-458c-af39-927359d7c940"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";KeyBoardMouse"",
+                    ""action"": ""ItemUse"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b4fb04ea-2454-45ba-b594-129133e94b06"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";KeyBoardMouse"",
+                    ""action"": ""ItemUse"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -246,6 +277,7 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
         m_Character_MouseInput = m_Character.FindAction("MouseInput", throwIfNotFound: true);
         m_Character_Interaction = m_Character.FindAction("Interaction", throwIfNotFound: true);
         m_Character_Test = m_Character.FindAction("Test", throwIfNotFound: true);
+        m_Character_ItemUse = m_Character.FindAction("ItemUse", throwIfNotFound: true);
     }
 
     ~@CharacterInputAction()
@@ -330,6 +362,7 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
     private readonly InputAction m_Character_MouseInput;
     private readonly InputAction m_Character_Interaction;
     private readonly InputAction m_Character_Test;
+    private readonly InputAction m_Character_ItemUse;
     /// <summary>
     /// Provides access to input actions defined in input action map "Character".
     /// </summary>
@@ -357,6 +390,10 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Character/Test".
         /// </summary>
         public InputAction @Test => m_Wrapper.m_Character_Test;
+        /// <summary>
+        /// Provides access to the underlying input action "Character/ItemUse".
+        /// </summary>
+        public InputAction @ItemUse => m_Wrapper.m_Character_ItemUse;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -395,6 +432,9 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
             @Test.started += instance.OnTest;
             @Test.performed += instance.OnTest;
             @Test.canceled += instance.OnTest;
+            @ItemUse.started += instance.OnItemUse;
+            @ItemUse.performed += instance.OnItemUse;
+            @ItemUse.canceled += instance.OnItemUse;
         }
 
         /// <summary>
@@ -418,6 +458,9 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
             @Test.started -= instance.OnTest;
             @Test.performed -= instance.OnTest;
             @Test.canceled -= instance.OnTest;
+            @ItemUse.started -= instance.OnItemUse;
+            @ItemUse.performed -= instance.OnItemUse;
+            @ItemUse.canceled -= instance.OnItemUse;
         }
 
         /// <summary>
@@ -499,5 +542,12 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnTest(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ItemUse" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnItemUse(InputAction.CallbackContext context);
     }
 }
