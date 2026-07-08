@@ -149,12 +149,4 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
         if (isOpen || isMoving) return;
         photonView.RPC("RPC_OpenDoor", RpcTarget.AllViaServer);
     }
-
-    public void OnInteract(GameObject[] obj=null)
-    {
-        Debug.Log($"[PieceDoor] 버튼 클릭됨. isOpen={isOpen} isMoving={isMoving}");
-        if (isOpen || isMoving) return;
-
-        photonView.RPC("RPC_OpenDoor", RpcTarget.AllViaServer); // [변경]
-    }
 }
