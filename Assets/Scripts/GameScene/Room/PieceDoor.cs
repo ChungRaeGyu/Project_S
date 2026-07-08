@@ -10,7 +10,7 @@ using Photon.Pun;
 ///   - 부모의 BoxCollider 로컬로 비활성화 (다시 켜지지 않음)
 ///   - 자식 문 오브젝트 위로 슬라이드 (RPC로 전체 동기화)
 /// </summary>
-public class PieceDoor : MonoBehaviourPun
+public class PieceDoor : MonoBehaviourPun, IInteractable
 {
     [Header("문 설정")]
     [SerializeField] private float openHeight = 4f;
@@ -148,5 +148,13 @@ public class PieceDoor : MonoBehaviourPun
     {
         if (isOpen || isMoving) return;
         photonView.RPC("RPC_OpenDoor", RpcTarget.AllViaServer);
+    }
+
+    public void OnInteract(GameObject[] obj=null)
+    {
+        Debug.Log($"[PieceDoor] 버튼 클릭됨. isOpen={isOpen} isMoving={isMoving}");
+        if (isOpen || isMoving) return;
+
+        photonView.RPC("RPC_OpenDoor", RpcTarget.AllViaServer); // [변경]
     }
 }

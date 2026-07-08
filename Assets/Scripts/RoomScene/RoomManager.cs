@@ -5,7 +5,7 @@ public class RoomManager : MonoBehaviour
 {
     private void Start()
     {
-        PhotonNetwork.Instantiate("Cube", Vector3.zero, Quaternion.identity);
+        PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity);
     }
 
     public void GameStart()
