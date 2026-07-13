@@ -10,7 +10,6 @@ public class CharacterInput : MonoBehaviour
 
     public event Action interact;
 
-    public event Action<InputAction.CallbackContext> OnMouseButton;
     public void InputSetting()
     {
         inputActions = new CharacterInputAction();
@@ -20,18 +19,10 @@ public class CharacterInput : MonoBehaviour
         inputActions.Character.MouseInput.canceled += OnLook;
         inputActions.Character.Interaction.performed += OnInteraction;
         inputActions.Character.Test.performed += OnTest;
-        inputActions.Character.ItemUse.performed += OnItemUse;
-    }
-
-    private void OnItemUse(InputAction.CallbackContext context)
-    {
-        if(context.phase == InputActionPhase.Performed)
-            OnMouseButton?.Invoke(context);
     }
 
     private void OnTest(InputAction.CallbackContext context)
     {
-        //Tab키를 눌러 마우스의 자유를 얻는다.
         if (context.phase == InputActionPhase.Performed)
         {
             if(Cursor.lockState == CursorLockMode.Locked)

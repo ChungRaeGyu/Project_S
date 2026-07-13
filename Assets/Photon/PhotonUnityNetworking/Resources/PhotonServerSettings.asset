@@ -41,6 +41,8 @@ MonoBehaviour:
   - RespawnSpaceship
   - RPC_OpenDoor
   - RPC_RoundStart
+  - RPC_SyncState
+  - RPC_Activate
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 0

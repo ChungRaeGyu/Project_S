@@ -149,4 +149,5 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
         if (isOpen || isMoving) return;
         photonView.RPC("RPC_OpenDoor", RpcTarget.AllViaServer);
     }
+
 }
