@@ -31,6 +31,9 @@ public class RoomGenerator : MonoBehaviourPunCallbacks
     [Header("런타임 NavMesh (방이 절차적으로 생성되므로 에디터에서 미리 구운 NavMesh는 쓸 수 없음)")]
     [SerializeField] private NavMeshSurface navMeshSurface;
 
+    // 문이 열리거나 닫힐 때 다시 구워야 하므로 다른 스크립트(PieceDoor, MonsterDoor)가 호출할 수 있게 싱글턴으로 노출
+    public static RoomGenerator Instance { get; private set; }
+
     private float currentX = 0f;
     private readonly List<GameObject> spawnedObjects = new List<GameObject>();
 
@@ -43,6 +46,26 @@ public class RoomGenerator : MonoBehaviourPunCallbacks
 
     // Piece 방에 붙어있는 MonsterZone을 생성 순서대로 모아둠 - 생성 완료 후 MonsterAI에 전달
     private readonly List<MonsterAI.Zone> monsterZones = new List<MonsterAI.Zone>();
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+
+    // 문이 열리거나 닫혀서 통로 상태가 바뀔 때마다 호출 - 마스터에서만 실제로 다시 굽는다.
+    // (MonsterAI가 마스터에서만 동작하므로 이 갱신도 마스터에서만 의미 있음)
+    public void RebuildNavMesh()
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+        if (navMeshSurface == null) return;
+
+        navMeshSurface.BuildNavMesh();
+    }
 
     // -----------------------------------------------
     // 씬 로드 시 자동 실행 - 마스터만 생성
@@ -98,12 +121,10 @@ public class RoomGenerator : MonoBehaviourPunCallbacks
             }
         }
 
-        // 모든 방(몬스터룸 포함)이 생성된 뒤 NavMesh를 다시 굽는다.
-        // MonsterAI는 마스터에서만 동작하므로 이 빌드도 마스터에서만 일어나면 충분하다.
-        if (navMeshSurface != null)
-            navMeshSurface.BuildNavMesh();
-        else
+        // 모든 방(몬스터룸 포함)이 생성된 뒤 NavMesh를 처음으로 굽는다.
+        if (navMeshSurface == null)
             Debug.LogWarning("[RoomGenerator] navMeshSurface가 연결되지 않아 몬스터가 NavMesh 위에 있지 못할 수 있습니다.");
+        RebuildNavMesh();
 
         // [변경] RoundManager에 매핑 정보 전달
         if (RoundManager.Instance != null)

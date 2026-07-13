@@ -78,5 +78,8 @@ public class MonsterDoor : MonoBehaviourPun
 
         if (doorChild != null)
             doorChild.position = openPos;
+
+        // 문이 다 열렸으니 몬스터에게 알려서 헌팅 시퀀스(HuntWindup -> Berserk)를 시작하게 한다.
+        MonsterAI.Instance?.NotifyDoorOpened();
     }
 }

@@ -4,21 +4,21 @@ using UnityEngine.UI;
 using Photon.Pun;
 
 /// <summary>
-/// Piece, ShopRoom, ReadyRoom, StartRoom ¹®¿¡ ¸ğµÎ »ç¿ë °¡´ÉÇÑ ¹ü¿ë ¹® ½ºÅ©¸³Æ®.
-/// ºÎ¸ğ ¿ÀºêÁ§Æ®¿¡ ºÎÂø. ÀÚ½Ä ¿ÀºêÁ§Æ®°¡ ½ÇÁ¦·Î ½½¶óÀÌµåµÇ´Â ¹®.
-/// OnInteract() È£Ãâ ½Ã:
-///   - ºÎ¸ğÀÇ BoxCollider ·ÎÄÃ·Î ºñÈ°¼ºÈ­ (´Ù½Ã ÄÑÁöÁö ¾ÊÀ½)
-///   - ÀÚ½Ä ¹® ¿ÀºêÁ§Æ® À§·Î ½½¶óÀÌµå (RPC·Î ÀüÃ¼ µ¿±âÈ­)
+/// Piece, ShopRoom, ReadyRoom, StartRoom ë¬¸ì— ëª¨ë‘ ì‚¬ìš© ê°€ëŠ¥í•œ ë²”ìš© ë¬¸ ìŠ¤í¬ë¦½íŠ¸.
+/// ë¶€ëª¨ ì˜¤ë¸Œì íŠ¸ì— ë¶€ì°©. ìì‹ ì˜¤ë¸Œì íŠ¸ê°€ ì‹¤ì œë¡œ ìŠ¬ë¼ì´ë“œë˜ëŠ” ë¬¸.
+/// OnInteract() í˜¸ì¶œ ì‹œ:
+///   - ë¶€ëª¨ì˜ BoxCollider ë¡œì»¬ë¡œ ë¹„í™œì„±í™” (ë‹¤ì‹œ ì¼œì§€ì§€ ì•ŠìŒ)
+///   - ìì‹ ë¬¸ ì˜¤ë¸Œì íŠ¸ ìœ„ë¡œ ìŠ¬ë¼ì´ë“œ (RPCë¡œ ì „ì²´ ë™ê¸°í™”)
 /// </summary>
 public class PieceDoor : MonoBehaviourPun, IInteractable
 {
-    [Header("¹® ¼³Á¤")]
+    [Header("ë¬¸ ì„¤ì •")]
     [SerializeField] private float openHeight = 4f;
     [SerializeField] private float openDuration = 1f;
     [SerializeField] private float closeDelay = 10f;
 
-    // [º¯°æ] ½½¶óÀÌµåÇÒ ÀÚ½Ä ¿ÀºêÁ§Æ®
-    [Header("½½¶óÀÌµåÇÒ ÀÚ½Ä ¹® ¿ÀºêÁ§Æ®")]
+    // [ë³€ê²½] ìŠ¬ë¼ì´ë“œí•  ìì‹ ì˜¤ë¸Œì íŠ¸
+    [Header("ìŠ¬ë¼ì´ë“œí•  ìì‹ ë¬¸ ì˜¤ë¸Œì íŠ¸")]
     [SerializeField] private Transform doorChild;
 
     private Button linkedButton;
@@ -27,15 +27,15 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
     private bool isOpen = false;
     private bool isMoving = false;
 
-    // [º¯°æ] ºÎ¸ğÀÇ BoxCollider ÂüÁ¶
+    // [ë³€ê²½] ë¶€ëª¨ì˜ BoxCollider ì°¸ì¡°
     private BoxCollider doorCollider;
 
     // -----------------------------------------------
-    // DoorManager¿¡¼­ È£Ãâ - ¹öÆ° ¿¬°á ¹× À§Ä¡ ÃÊ±âÈ­
+    // DoorManagerì—ì„œ í˜¸ì¶œ - ë²„íŠ¼ ì—°ê²° ë° ìœ„ì¹˜ ì´ˆê¸°í™”
     // -----------------------------------------------
     public void Init(Button button)
     {
-        // [º¯°æ] ÀÚ½Ä ±âÁØÀ¸·Î À§Ä¡ ÃÊ±âÈ­
+        // [ë³€ê²½] ìì‹ ê¸°ì¤€ìœ¼ë¡œ ìœ„ì¹˜ ì´ˆê¸°í™”
         if (doorChild != null)
         {
             closedPos = doorChild.position;
@@ -43,10 +43,10 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
         }
         else
         {
-            Debug.LogWarning($"[PieceDoor] '{gameObject.name}' doorChild°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            Debug.LogWarning($"[PieceDoor] '{gameObject.name}' doorChildê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
         }
 
-        // [º¯°æ] ºÎ¸ğÀÇ BoxCollider Ä³½Ì
+        // [ë³€ê²½] ë¶€ëª¨ì˜ BoxCollider ìºì‹±
         doorCollider = GetComponent<BoxCollider>();
 
         linkedButton = button;
@@ -54,38 +54,38 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
         if (linkedButton != null)
         {
             linkedButton.onClick.AddListener(OnButtonClick);
-            Debug.Log($"[PieceDoor] '{gameObject.name}' ¹öÆ° ¿¬°á ¼º°ø.");
+            Debug.Log($"[PieceDoor] '{gameObject.name}' ë²„íŠ¼ ì—°ê²° ì„±ê³µ.");
         }
         else
         {
-            Debug.LogWarning($"[PieceDoor] '{gameObject.name}'¿¡ ¿¬°áµÈ ¹öÆ°ÀÌ ¾ø½À´Ï´Ù.");
+            Debug.LogWarning($"[PieceDoor] '{gameObject.name}'ì— ì—°ê²°ëœ ë²„íŠ¼ì´ ì—†ìŠµë‹ˆë‹¤.");
         }
     }
 
     // -----------------------------------------------
-    // ¹öÆ° Å¬¸¯ ½Ã - RPC·Î ¸ğµç Å¬¶óÀÌ¾ğÆ®¿¡ Àü´Ş
+    // ë²„íŠ¼ í´ë¦­ ì‹œ - RPCë¡œ ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ì— ì „ë‹¬
     // -----------------------------------------------
     private void OnButtonClick()
     {
-        Debug.Log($"[PieceDoor] ¹öÆ° Å¬¸¯µÊ. isOpen={isOpen} isMoving={isMoving}");
+        Debug.Log($"[PieceDoor] ë²„íŠ¼ í´ë¦­ë¨. isOpen={isOpen} isMoving={isMoving}");
         if (isOpen || isMoving) return;
 
         photonView.RPC("RPC_OpenDoor", RpcTarget.AllViaServer);
     }
 
     // -----------------------------------------------
-    // ¸ğµç Å¬¶óÀÌ¾ğÆ®¿¡¼­ ½ÇÇàµÇ´Â RPC
+    // ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ì—ì„œ ì‹¤í–‰ë˜ëŠ” RPC
     // -----------------------------------------------
     [PunRPC]
     private void RPC_OpenDoor()
     {
-        Debug.Log($"[PieceDoor] RPC_OpenDoor ¼ö½Å. '{gameObject.name}'");
+        Debug.Log($"[PieceDoor] RPC_OpenDoor ìˆ˜ì‹ . '{gameObject.name}'");
         if (isOpen || isMoving) return;
         StartCoroutine(OpenThenClose());
     }
 
     // -----------------------------------------------
-    // ¿­±â -> ´ë±â -> ´İ±â
+    // ì—´ê¸° -> ëŒ€ê¸° -> ë‹«ê¸°
     // -----------------------------------------------
     private IEnumerator OpenThenClose()
     {
@@ -98,8 +98,8 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
     }
 
     // -----------------------------------------------
-    // ÀÚ½Ä ¹® ½½¶óÀÌµå
-    // [º¯°æ] transform ´ë½Å doorChild ±âÁØÀ¸·Î ÀÌµ¿
+    // ìì‹ ë¬¸ ìŠ¬ë¼ì´ë“œ
+    // [ë³€ê²½] transform ëŒ€ì‹  doorChild ê¸°ì¤€ìœ¼ë¡œ ì´ë™
     // -----------------------------------------------
     private IEnumerator SlideDoor(Vector3 from, Vector3 to)
     {
@@ -116,7 +116,7 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
             float t = Mathf.Clamp01(elapsed / openDuration);
             t = 1f - Mathf.Pow(1f - t, 3f);
             if (doorChild != null)
-                doorChild.position = Vector3.Lerp(from, to, t); // [º¯°æ]
+                doorChild.position = Vector3.Lerp(from, to, t); // [ë³€ê²½]
             yield return null;
         }
 
@@ -126,15 +126,15 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
     }
 
     // -----------------------------------------------
-    // »óÈ£ÀÛ¿ë ½Ã È£Ãâ
-    // [º¯°æ] ºÎ¸ğ BoxCollider ·ÎÄÃ·Î ²ô±â + RPC·Î ÀÚ½Ä ¹® ¿­±â
+    // ìƒí˜¸ì‘ìš© ì‹œ í˜¸ì¶œ
+    // [ë³€ê²½] ë¶€ëª¨ BoxCollider ë¡œì»¬ë¡œ ë„ê¸° + RPCë¡œ ìì‹ ë¬¸ ì—´ê¸°
     // -----------------------------------------------
     public void OnInteract(GameObject[] obj = null)
     {
-        Debug.Log($"[PieceDoor] OnInteract È£Ãâ. isOpen={isOpen} isMoving={isMoving}");
+        Debug.Log($"[PieceDoor] OnInteract í˜¸ì¶œ. isOpen={isOpen} isMoving={isMoving}");
         if (isOpen || isMoving) return;
 
-        // [º¯°æ] ºÎ¸ğ BoxCollider ·ÎÄÃ·Î ºñÈ°¼ºÈ­ (´Ù½Ã ÄÑÁöÁö ¾ÊÀ½)
+        // [ë³€ê²½] ë¶€ëª¨ BoxCollider ë¡œì»¬ë¡œ ë¹„í™œì„±í™” (ë‹¤ì‹œ ì¼œì§€ì§€ ì•ŠìŒ)
         if (doorCollider != null)
             doorCollider.enabled = false;
 
@@ -142,7 +142,7 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
     }
 
     // -----------------------------------------------
-    // ÄÚµå·Î Á÷Á¢ ¿­ ¶§ »ç¿ë (Ä³¸¯ÅÍ ½Ã½ºÅÛ ¿¬µ¿¿ë)
+    // ì½”ë“œë¡œ ì§ì ‘ ì—´ ë•Œ ì‚¬ìš© (ìºë¦­í„° ì‹œìŠ¤í…œ ì—°ë™ìš©)
     // -----------------------------------------------
     public void OpenDoor()
     {

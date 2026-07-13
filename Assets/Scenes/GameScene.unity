@@ -603,7 +603,7 @@ MonoBehaviour:
   m_Center: {x: 0, y: 2, z: 0}
   m_LayerMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 183
   m_UseGeometry: 0
   m_DefaultArea: 0
   m_GenerateLinks: 0
@@ -4419,6 +4419,6 @@ SceneRoots:
   - {fileID: 922793925}
   - {fileID: 1369498381}
   - {fileID: 1499892353}
+  - {fileID: 325253930}
   - {fileID: 208412585}
   - {fileID: 666079277}
-  - {fileID: 325253930}

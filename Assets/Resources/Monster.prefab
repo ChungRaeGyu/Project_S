@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1983892765082991399}
   - component: {fileID: 7076214664075929390}
   - component: {fileID: 354219301701977901}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: MonsterObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -255,7 +255,6 @@ MonoBehaviour:
   playerScanInterval: 0.5
   eyes: {fileID: 0}
   zones: []
-  startRoomDoorDelay: 60
   huntWindupDuration: 10
   postChaseZoneSearchDuration: 30
   berserkDuration: 15
@@ -275,3 +274,5 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1
   loseSightTimeout: 3
+  doorBreakRadius: 2
+  doorCheckInterval: 0.5

@@ -50,8 +50,7 @@ public class MonsterAI : MonoBehaviourPun
     public Zone[] zones;
 
     [Header("Timing - 플로우차트에 명시된 값")]
-    public float startRoomDoorDelay = 60f;          // 1분 경과 후 Monster Door 열림
-    public float huntWindupDuration = 10f;          // 헌팅시간 10초 진행
+    public float huntWindupDuration = 10f;          // Monster Door가 열린 뒤 광폭모드 진입까지 대기 시간
     public float postChaseZoneSearchDuration = 30f; // 30초 동안 현재 구역 서칭 유지
 
     [Header("Timing - 플로우차트에 값이 없어 임의 지정 (기획값 확정 필요)")]
@@ -85,6 +84,11 @@ public class MonsterAI : MonoBehaviourPun
     [Tooltip("공격 사거리 밖에서 이 시간(초) 동안 시야에 안 잡히면 '놓침'으로 처리")]
     public float loseSightTimeout = 3f;
 
+    [Header("문 강제 개방")]
+    [Tooltip("이 반경 안의 닫힌 PieceDoor는 플레이어 상호작용 없이 몬스터가 강제로 연다")]
+    public float doorBreakRadius = 3f;
+    public float doorCheckInterval = 0.5f;
+
     // 씬에 몬스터가 하나뿐이라고 가정한 싱글턴 (RoomGenerator가 구역 정보를 넘겨줄 때 사용)
     public static MonsterAI Instance { get; private set; }
 
@@ -98,10 +102,11 @@ public class MonsterAI : MonoBehaviourPun
     bool chaseStartedFromBerserk;
     Transform target; // Chase 상태에서 쫓는 특정 플레이어
     bool roundEndedSignal;
-    bool roundStartedSignal;
+    bool doorOpenedSignal;
 
     Transform[] cachedPlayers = System.Array.Empty<Transform>();
     float playerCacheTimer;
+    float doorCheckTimer;
 
     void Awake()
     {
@@ -135,10 +140,7 @@ public class MonsterAI : MonoBehaviourPun
         }
 
         if (RoundManager.Instance != null)
-        {
             RoundManager.Instance.OnRoundEnded += HandleRoundEnded;
-            RoundManager.Instance.OnRoundStarted += HandleRoundStarted;
-        }
 
         // FSM은 여기서 바로 시작하지 않는다. 이 시점엔 아직 RoomGenerator가 NavMesh를 굽기 전이라
         // NavMeshAgent가 NavMesh 위에 있지 않은 상태다. RoomGenerator가 BuildNavMesh() 이후
@@ -162,9 +164,31 @@ public class MonsterAI : MonoBehaviourPun
     void OnDestroy()
     {
         if (RoundManager.Instance != null)
-        {
             RoundManager.Instance.OnRoundEnded -= HandleRoundEnded;
-            RoundManager.Instance.OnRoundStarted -= HandleRoundStarted;
+    }
+
+    void Update()
+    {
+        // 사냥을 시작하기 전(Dormant/HuntWindup)이나 게임이 끝난 뒤에는 문을 부수지 않는다
+        if (CurrentState == MonsterState.Dormant || CurrentState == MonsterState.HuntWindup || CurrentState == MonsterState.GameEnded)
+            return;
+
+        doorCheckTimer -= Time.deltaTime;
+        if (doorCheckTimer > 0f) return;
+        doorCheckTimer = doorCheckInterval;
+
+        ForceOpenNearbyDoors();
+    }
+
+    // 근처의 닫힌 PieceDoor를 플레이어 상호작용 없이 강제로 연다 (몬스터는 문에 막히지 않는다)
+    void ForceOpenNearbyDoors()
+    {
+        Collider[] hits = Physics.OverlapSphere(transform.position, doorBreakRadius);
+        foreach (Collider hit in hits)
+        {
+            PieceDoor door = hit.GetComponentInParent<PieceDoor>();
+            if (door != null)
+                door.OpenDoor();
         }
     }
 
@@ -173,9 +197,10 @@ public class MonsterAI : MonoBehaviourPun
         roundEndedSignal = true;
     }
 
-    void HandleRoundStarted()
+    // MonsterDoor가 실제로 문을 다 연 직후 호출한다. Dormant는 이 신호를 기다린 뒤에야 헌팅 시퀀스를 시작한다.
+    public void NotifyDoorOpened()
     {
-        roundStartedSignal = true;
+        doorOpenedSignal = true;
     }
 
     void ChangeState(MonsterState newState)
@@ -203,25 +228,20 @@ public class MonsterAI : MonoBehaviourPun
         CurrentState = (MonsterState)state;
     }
 
-    // 플레이어 StartRoom 진입 후 문 열음 -> 1분 경과 후 Monster Door 열림
+    // Monster Door가 실제로 다 열릴 때까지 대기 (MonsterDoor.NotifyDoorOpened가 신호를 보냄)
     IEnumerator Dormant()
     {
         agent.isStopped = true;
 
-        // RoundManager가 있으면 라운드가 실제로 시작될 때까지 기다렸다가 카운트다운 시작
-        // (MonsterDoor의 문 연출도 같은 OnRoundStarted 기준으로 열리므로 서로 어긋나지 않는다)
-        if (RoundManager.Instance != null)
-        {
-            roundStartedSignal = false;
-            while (!roundStartedSignal)
-                yield return null;
-        }
+        // Dormant는 게임당 한 번만 실행되므로 여기서 굳이 false로 리셋하지 않는다.
+        // (NavMesh 빌드가 늦어져 OnNavMeshReady()보다 문 오픈 신호가 먼저 도착하는 경우를 대비)
+        while (!doorOpenedSignal)
+            yield return null;
 
-        yield return new WaitForSeconds(startRoomDoorDelay);
         ChangeState(MonsterState.HuntWindup);
     }
 
-    // 헌팅시간 시작, 10초 진행
+    // 문이 열린 뒤 광폭모드 진입까지 대기
     IEnumerator HuntWindup()
     {
         agent.isStopped = true;
@@ -242,16 +262,31 @@ public class MonsterAI : MonoBehaviourPun
             yield break;
         }
 
+        bool snapshotTaken = false;
         if (berserkTargetingMode == TargetingMode.SingleSnapshot)
-            agent.SetDestination(berserkTarget.position);
+            snapshotTaken = TrySetDestination(berserkTarget.position);
 
         float timer = 0f;
         while (timer < berserkDuration)
         {
             timer += Time.deltaTime;
 
-            if (berserkTargetingMode == TargetingMode.FixedTarget && berserkTarget != null)
-                agent.SetDestination(berserkTarget.position);
+            if (berserkTarget == null)
+            {
+                // 타겟이 접속 종료 등으로 사라졌으면 광폭모드를 계속할 이유가 없다
+                ChangeState(MonsterState.Patrol);
+                yield break;
+            }
+
+            if (berserkTargetingMode == TargetingMode.FixedTarget)
+            {
+                TrySetDestination(berserkTarget.position);
+            }
+            else if (!snapshotTaken)
+            {
+                // 첫 시도가 실패했을 수 있으니(플레이어 위치가 NavMesh에서 살짝 벗어난 경우 등) 성공할 때까지 재시도
+                snapshotTaken = TrySetDestination(berserkTarget.position);
+            }
 
             // 플레이어 찾았거나 좇는 중인가요? -> Yes
             if (TryFindVisiblePlayer(out Transform seenPlayer))
@@ -308,7 +343,7 @@ public class MonsterAI : MonoBehaviourPun
             {
                 if (lastHeardPosition.HasValue)
                 {
-                    agent.SetDestination(lastHeardPosition.Value);
+                    TrySetDestination(lastHeardPosition.Value);
                     lastHeardPosition = null; // 도착하면 소리 단서 소모, 이후 일반 순찰 재개
                 }
                 else
@@ -350,7 +385,7 @@ public class MonsterAI : MonoBehaviourPun
                 yield break;
             }
 
-            agent.SetDestination(target.position);
+            TrySetDestination(target.position);
 
             attackTimer -= Time.deltaTime;
             float distance = Vector3.Distance(transform.position, target.position);
@@ -424,6 +459,16 @@ public class MonsterAI : MonoBehaviourPun
     {
         agent.isStopped = true;
         yield return null;
+    }
+
+    // 플레이어 위치 등 NavMesh 위에 정확히 있다는 보장이 없는 좌표로 목적지를 설정할 때 사용.
+    // 가까운 NavMesh 지점으로 스냅한 뒤 시도하고, 실패하면 false를 반환한다(호출부에서 다음 프레임에 재시도 가능).
+    bool TrySetDestination(Vector3 worldPosition)
+    {
+        if (NavMesh.SamplePosition(worldPosition, out NavMeshHit hit, 3f, NavMesh.AllAreas))
+            return agent.SetDestination(hit.position);
+
+        return false;
     }
 
     void GoToNextPatrolPoint()

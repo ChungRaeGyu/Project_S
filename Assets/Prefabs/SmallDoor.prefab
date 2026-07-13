@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 4971184743763606576}
   - component: {fileID: 6673609271428457014}
   - component: {fileID: 619130769866211710}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: SmallDoor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -106,7 +106,8 @@ GameObject:
   - component: {fileID: 7218432021187418957}
   - component: {fileID: 9163034145209850548}
   - component: {fileID: 2258538292923134857}
-  m_Layer: 0
+  - component: {fileID: 1484658460099264226}
+  m_Layer: 8
   m_Name: DoorObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -206,3 +207,19 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!208 &1484658460099264226
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3361189279386718202}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 0.5, y: 0.5, z: 0.5}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0, z: 0}
+  m_TimeToStationary: 0.5
