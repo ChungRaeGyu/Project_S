@@ -232,6 +232,10 @@ MonoBehaviour:
   mouseSensitivity: 0.2
   minXRotation: -70
   maxXRotation: 70
+  interactDistance: 3
+  interactLayer:
+    serializedVersion: 2
+    m_Bits: 256
 --- !u!114 &-5454605052138823259
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -244,6 +248,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9de24c534396a67428e5921da96e481e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterStat
+  equips: []
 --- !u!114 &4688813357778417445
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -264,7 +269,7 @@ MonoBehaviour:
   observableSearch: 2
   ObservedComponents:
   - {fileID: 9042869623193467675}
-  sceneViewId: 0
+  sceneViewId: 3
   InstantiationId: 0
   isRuntimeInstantiated: 0
 --- !u!114 &9042869623193467675
