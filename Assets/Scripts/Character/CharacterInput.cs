@@ -10,6 +10,8 @@ public class CharacterInput : MonoBehaviour
 
     public event Action interact;
 
+    public event Action itemInteract;
+
     public event Action<InputAction.CallbackContext> OnMouseButton;
     public void InputSetting()
     {
@@ -19,6 +21,7 @@ public class CharacterInput : MonoBehaviour
         inputActions.Character.MouseInput.performed += OnLook;
         inputActions.Character.MouseInput.canceled += OnLook;
         inputActions.Character.Interaction.performed += OnInteraction;
+        inputActions.Character.ItemInteraction.performed += OnItemInteraction;
         inputActions.Character.Test.performed += OnTest;
         inputActions.Character.ItemUse.performed += OnItemUse;
     }
@@ -52,6 +55,13 @@ public class CharacterInput : MonoBehaviour
         if(context.phase == InputActionPhase.Performed)
         {
             interact?.Invoke();
+        }
+    }
+    private void OnItemInteraction(InputAction.CallbackContext context)
+    {
+        if (context.phase == InputActionPhase.Performed)
+        {
+            itemInteract?.Invoke();
         }
     }
     public void OnLook(InputAction.CallbackContext context)

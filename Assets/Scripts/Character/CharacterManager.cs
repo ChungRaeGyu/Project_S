@@ -30,11 +30,26 @@ public class CharacterManager : MonoBehaviour
     void Start()
     {
         characterLook.Set();
-        characterInput.interact += stat.Interact;
-        characterLook.changeInteractable += stat.ChangeInteractable;
-
+        Interact();
+        ItemInteract();
         characterInput.OnMouseButton += characterBehavior.OnMouseButton;
         
+    }
+    private void Interact()
+    {
+        // Look -> stat -> Input -> stat
+        // Look에서 상호작용 가능한 오브젝트를 감지하면 stat에 전달
+        // Input에서 상호작용 버튼을 누르면 stat에서 상호작용 수행
+        characterLook.changeInteractable += stat.ChangeInteractable;
+        characterInput.interact += stat.Interact;
+
+    }
+    private void ItemInteract()
+    {
+        // Input -> 
+        characterLook.changeItem += stat.ChangeItemInteract;
+        characterInput.itemInteract += characterBehavior.GetItem;
+
     }
     private void OnDisable()
     {

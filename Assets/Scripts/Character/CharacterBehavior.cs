@@ -34,31 +34,38 @@ public class CharacterBehavior : MonoBehaviour
     }
     internal void OnMouseButton(InputAction.CallbackContext context)
     {
-        if (context.control == Mouse.current.leftButton)
+/*        if (context.control == Mouse.current.leftButton)
         {
             if (stat.equips[0] == null) return;
-            //objects[0].GetComponent<IItemUse>().Use();
+            if (stat.equips[0].TryGetComponent<IItemUse>(out var itemUse))
+            {
+                itemUse.Use();
+            }
         }
         else if (context.control == Mouse.current.rightButton)
         {
             if (stat.equips[1] == null) return;
-            //objects[1].GetComponent<IItemUse>().Use();
-        }
+            if (stat.equips[1].TryGetComponent<IItemUse>(out var itemUse))
+            {
+                itemUse.Use();
+            }
+        }*/
     }
 
-    public void GetItem(GameObject item)
+    public void GetItem()
     {
-        //아이템키는 E, 상점에서 
+        //아이템키는 E, 상점에서 소환후 땅에 떨어뜨리기
         if (stat.equips[1] != null)
         {
             //Items[1]을 버린다.
         }
         int num = stat.equips[0] == null ? 0 : 1;
-        stat.equips[num] = item;
+        stat.equips[num] = stat.GetcurrentItem();
     }
 
     public void RemoveItem(GameObject item)
     {
+        //키를 1번, 2번으로 구분
         //아이템 버리기 만들기
     }
 

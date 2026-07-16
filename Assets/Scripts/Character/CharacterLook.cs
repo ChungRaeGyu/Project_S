@@ -15,6 +15,7 @@ public class CharacterLook : MonoBehaviour
 
     private Collider currentCollider;
     public event Action<IInteractable> changeInteractable;
+    public event Action<GameObject> changeItem;
     public void Set()
     {
         Cursor.lockState = CursorLockMode.Locked;
@@ -58,9 +59,16 @@ public class CharacterLook : MonoBehaviour
             if (currentCollider == hit.collider) return;
 
             currentCollider = hit.collider;
-
-            IInteractable interactable = hit.collider.GetComponent<IInteractable>();
-            changeInteractable?.Invoke(interactable);
+            
+            if(currentCollider.TryGetComponent(out IInteractable co))
+            {
+                IInteractable interactable = hit.collider.GetComponent<IInteractable>();
+                changeInteractable?.Invoke(interactable);
+            }
+            else
+            {
+                changeItem?.Invoke(currentCollider.gameObject);
+            }
 
         }
         else
