@@ -12,6 +12,8 @@ public class CharacterInput : MonoBehaviour
 
     public event Action itemInteract;
 
+    public event Action<int> itemDrop;
+
     public event Action<InputAction.CallbackContext> OnMouseButton;
     public void InputSetting()
     {
@@ -24,6 +26,19 @@ public class CharacterInput : MonoBehaviour
         inputActions.Character.ItemInteraction.performed += OnItemInteraction;
         inputActions.Character.Test.performed += OnTest;
         inputActions.Character.ItemUse.performed += OnItemUse;
+        inputActions.Character.ItemDrop.performed += OnItemDrop;
+    }
+
+    private void OnItemDrop(InputAction.CallbackContext context)
+    {
+        if (context.phase == InputActionPhase.Performed)
+        {
+            if(context.control == Keyboard.current.digit1Key)
+                itemDrop?.Invoke(1);
+            else if(context.control == Keyboard.current.digit2Key)
+                itemDrop?.Invoke(2);
+
+        }
     }
 
     private void OnItemUse(InputAction.CallbackContext context)

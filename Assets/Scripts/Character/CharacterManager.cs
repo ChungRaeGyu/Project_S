@@ -32,6 +32,7 @@ public class CharacterManager : MonoBehaviour
         characterLook.Set();
         Interact();
         ItemInteract();
+        ItemDrop();
         characterInput.OnMouseButton += characterBehavior.OnMouseButton;
         
     }
@@ -49,6 +50,11 @@ public class CharacterManager : MonoBehaviour
         // Input -> 
         characterLook.changeItem += stat.ChangeItemInteract;
         characterInput.itemInteract += characterBehavior.GetItem;
+
+    }
+    private void ItemDrop()
+    {
+        characterInput.itemDrop += characterBehavior.RemoveItem;
 
     }
     private void OnDisable()

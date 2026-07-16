@@ -5,7 +5,7 @@ public class CharacterStat : MonoBehaviour
     //여기서 이제 어떤 장비를 가지고 있는 지 확인하고 
     public GameObject[] equips; //장비
     IInteractable currentInteractable;
-    GameObject currentItem;
+    GameObject currentItem; //보고 있는 장비
 
     public void ChangeItemInteract(GameObject obj)
     {

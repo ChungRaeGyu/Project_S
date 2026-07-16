@@ -145,6 +145,15 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ItemDrop"",
+                    ""type"": ""Button"",
+                    ""id"": ""adb026f9-a4e4-404b-b573-bdd7e46c8e45"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -268,6 +277,28 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
                     ""action"": ""ItemInteraction"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""4e88119f-8735-4ad3-b3e6-148071c414b2"",
+                    ""path"": ""<Keyboard>/1"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";KeyBoardMouse"",
+                    ""action"": ""ItemDrop"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e77c080f-57e8-4019-9715-b909c7dd8910"",
+                    ""path"": ""<Keyboard>/2"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";KeyBoardMouse"",
+                    ""action"": ""ItemDrop"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -299,6 +330,7 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
         m_Character_Test = m_Character.FindAction("Test", throwIfNotFound: true);
         m_Character_ItemUse = m_Character.FindAction("ItemUse", throwIfNotFound: true);
         m_Character_ItemInteraction = m_Character.FindAction("ItemInteraction", throwIfNotFound: true);
+        m_Character_ItemDrop = m_Character.FindAction("ItemDrop", throwIfNotFound: true);
     }
 
     ~@CharacterInputAction()
@@ -385,6 +417,7 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
     private readonly InputAction m_Character_Test;
     private readonly InputAction m_Character_ItemUse;
     private readonly InputAction m_Character_ItemInteraction;
+    private readonly InputAction m_Character_ItemDrop;
     /// <summary>
     /// Provides access to input actions defined in input action map "Character".
     /// </summary>
@@ -420,6 +453,10 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Character/ItemInteraction".
         /// </summary>
         public InputAction @ItemInteraction => m_Wrapper.m_Character_ItemInteraction;
+        /// <summary>
+        /// Provides access to the underlying input action "Character/ItemDrop".
+        /// </summary>
+        public InputAction @ItemDrop => m_Wrapper.m_Character_ItemDrop;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -464,6 +501,9 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
             @ItemInteraction.started += instance.OnItemInteraction;
             @ItemInteraction.performed += instance.OnItemInteraction;
             @ItemInteraction.canceled += instance.OnItemInteraction;
+            @ItemDrop.started += instance.OnItemDrop;
+            @ItemDrop.performed += instance.OnItemDrop;
+            @ItemDrop.canceled += instance.OnItemDrop;
         }
 
         /// <summary>
@@ -493,6 +533,9 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
             @ItemInteraction.started -= instance.OnItemInteraction;
             @ItemInteraction.performed -= instance.OnItemInteraction;
             @ItemInteraction.canceled -= instance.OnItemInteraction;
+            @ItemDrop.started -= instance.OnItemDrop;
+            @ItemDrop.performed -= instance.OnItemDrop;
+            @ItemDrop.canceled -= instance.OnItemDrop;
         }
 
         /// <summary>
@@ -588,5 +631,12 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnItemInteraction(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ItemDrop" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnItemDrop(InputAction.CallbackContext context);
     }
 }

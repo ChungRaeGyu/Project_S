@@ -1,5 +1,6 @@
 using Photon.Pun;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -34,7 +35,7 @@ public class CharacterBehavior : MonoBehaviour
     }
     internal void OnMouseButton(InputAction.CallbackContext context)
     {
-/*        if (context.control == Mouse.current.leftButton)
+        if (context.control == Mouse.current.leftButton)
         {
             if (stat.equips[0] == null) return;
             if (stat.equips[0].TryGetComponent<IItemUse>(out var itemUse))
@@ -49,7 +50,7 @@ public class CharacterBehavior : MonoBehaviour
             {
                 itemUse.Use();
             }
-        }*/
+        }
     }
 
     public void GetItem()
@@ -57,17 +58,23 @@ public class CharacterBehavior : MonoBehaviour
         //아이템키는 E, 상점에서 소환후 땅에 떨어뜨리기
         if (stat.equips[1] != null)
         {
-            //Items[1]을 버린다.
+            RemoveItem(1);
         }
         int num = stat.equips[0] == null ? 0 : 1;
         stat.equips[num] = stat.GetcurrentItem();
     }
 
-    public void RemoveItem(GameObject item)
+    public void RemoveItem(int num)
     {
+        if (stat.equips[num] != null)
+        {
+            //무기 프리펩을 드랍시켜야한다.   
+            stat.equips[num] = null;
+        }
         //키를 1번, 2번으로 구분
         //아이템 버리기 만들기
     }
+    //아이템의 부모를 없애고 중력을 주는 방식으로 떨군다.
 
-
+    //각자 아이템에 위치값을 가지고 있을 것이다.
 }
