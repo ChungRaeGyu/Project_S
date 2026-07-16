@@ -37,6 +37,12 @@ public class RoundManager : MonoBehaviourPun
 
     public static RoundManager Instance { get; private set; }
 
+    // 라운드 타이머가 종료될 때 로컬에서 발생 (네트워크 이벤트 아님 - 각 클라이언트가 자신의 로컬 타이머로 개별 발생)
+    public event System.Action OnRoundEnded;
+
+    // 라운드가 시작될 때 로컬에서 발생 (RPC_RoundStart는 모든 클라이언트에서 실행되므로 사실상 전체에 전파됨)
+    public event System.Action OnRoundStarted;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -119,6 +125,7 @@ public class RoundManager : MonoBehaviourPun
         isRunning = true;
 
         Debug.Log($"[RoundManager] {CurrentRound}라운드 시작! 제한시간: {time}초");
+        OnRoundStarted?.Invoke();
     }
 
     // -----------------------------------------------
@@ -164,6 +171,7 @@ public class RoundManager : MonoBehaviourPun
     private void HandleTimeUp()
     {
         Debug.Log($"[RoundManager] {CurrentRound}라운드 시간 종료.");
+        OnRoundEnded?.Invoke();
 
         if (!roundToPieceStep.TryGetValue(CurrentRound, out int targetStep))
         {

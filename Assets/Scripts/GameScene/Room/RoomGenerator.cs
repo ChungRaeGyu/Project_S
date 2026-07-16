@@ -3,41 +3,72 @@ using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
+using Unity.AI.Navigation;
 
 /// <summary>
-/// ¾À ·Îµå ½Ã ¸¶½ºÅÍ Å¬¶óÀÌ¾ğÆ®¸¸ °Ç¹°À» »ı¼ºÇÕ´Ï´Ù.
-/// Å¬¶óÀÌ¾ğÆ®´Â PhotonNetwork.Instantiate µ¿±âÈ­·Î ÀÚµ¿ ¼ö½ÅÇÕ´Ï´Ù.
-/// ¼ø¼­: StartRoom -> [Piece -> ShopRoom -> ReadyRoom] x N -> Piece -> EndRoom
+/// ì”¬ ë¡œë“œ ì‹œ ë§ˆìŠ¤í„° í´ë¼ì´ì–¸íŠ¸ë§Œ ê±´ë¬¼ì„ ìƒì„±í•©ë‹ˆë‹¤.
+/// í´ë¼ì´ì–¸íŠ¸ëŠ” PhotonNetwork.Instantiate ë™ê¸°í™”ë¡œ ìë™ ìˆ˜ì‹ í•©ë‹ˆë‹¤.
+/// ìˆœì„œ: StartRoom -> [Piece -> ShopRoom -> ReadyRoom] x N -> Piece -> EndRoom
 /// </summary>
 public class RoomGenerator : MonoBehaviourPunCallbacks
 {
-    [Header("Resources Æú´õ ³» ÇÁ¸®ÆÕ ÀÌ¸§")]
+    [Header("Resources í´ë” ë‚´ í”„ë¦¬íŒ¹ ì´ë¦„")]
     [SerializeField] private string startRoomName = "StartRoom";
+    [SerializeField] private string monsterRoomName = "MonsterRoom";
     [SerializeField] private string shopRoomName = "ShopRoom";
     [SerializeField] private string readyRoomName = "ReadyRoom";
     [SerializeField] private string endRoomName = "EndRoom";
 
-    [Header("Piece ¹İº¹ È½¼ö (¸¶Áö¸· Piece µÚ¿¡´Â Shop/Ready ¾øÀ½)")]
+    [Header("Piece ë°˜ë³µ íšŸìˆ˜ (ë§ˆì§€ë§‰ Piece ë’¤ì—ëŠ” Shop/Ready ì—†ìŒ)")]
     [SerializeField] private int pieceCount = 3;
 
-    [Header("Piece ÇÁ¸®ÆÕ ÀÌ¸§ ¸ñ·Ï (Inspector¿¡¼­ Ãß°¡/»èÁ¦ °¡´É)")]
-    [SerializeField] private string[] pieceNames = { "Piece0", "Piece1", "Piece2" }; // [º¯°æ] private readonly -> SerializeField
+    [Header("Piece í”„ë¦¬íŒ¹ ì´ë¦„ ëª©ë¡ (Inspectorì—ì„œ ì¶”ê°€/ì‚­ì œ ê°€ëŠ¥)")]
+    [SerializeField] private string[] pieceNames = { "Piece0", "Piece1", "Piece2" }; // [ë³€ê²½] private readonly -> SerializeField
 
-    [Header("°Ç¹° °£ °£°İ")]
+    [Header("ê±´ë¬¼ ê°„ ê°„ê²©")]
     [SerializeField] private float padding = 1f;
+
+    [Header("ëŸ°íƒ€ì„ NavMesh (ë°©ì´ ì ˆì°¨ì ìœ¼ë¡œ ìƒì„±ë˜ë¯€ë¡œ ì—ë””í„°ì—ì„œ ë¯¸ë¦¬ êµ¬ìš´ NavMeshëŠ” ì“¸ ìˆ˜ ì—†ìŒ)")]
+    [SerializeField] private NavMeshSurface navMeshSurface;
+
+    // ë¬¸ì´ ì—´ë¦¬ê±°ë‚˜ ë‹«í ë•Œ ë‹¤ì‹œ êµ¬ì›Œì•¼ í•˜ë¯€ë¡œ ë‹¤ë¥¸ ìŠ¤í¬ë¦½íŠ¸(PieceDoor, MonsterDoor)ê°€ í˜¸ì¶œí•  ìˆ˜ ìˆê²Œ ì‹±ê¸€í„´ìœ¼ë¡œ ë…¸ì¶œ
+    public static RoomGenerator Instance { get; private set; }
 
     private float currentX = 0f;
     private readonly List<GameObject> spawnedObjects = new List<GameObject>();
 
-    // [º¯°æ] ¹æ »ı¼º ¼ø¼­¸¦ ³ªÅ¸³»´Â Àü¿ª Ä«¿îÅÍ (0ºÎÅÍ ½ÃÀÛ, ¸ğµç ¹æ Á¾·ù Æ÷ÇÔ)
+    // [ë³€ê²½] ë°© ìƒì„± ìˆœì„œë¥¼ ë‚˜íƒ€ë‚´ëŠ” ì „ì—­ ì¹´ìš´í„° (0ë¶€í„° ì‹œì‘, ëª¨ë“  ë°© ì¢…ë¥˜ í¬í•¨)
     private int stepIndex = 0;
 
-    // [º¯°æ] ¾î¶² Piece°¡ ¸î ¶ó¿îµå¿¡ ÇØ´çÇÏ´ÂÁö RoundManager¿¡ ¾Ë¸®±â À§ÇÑ ¸ÅÇÎ
-    // key: ¶ó¿îµå ¹øÈ£(1ºÎÅÍ), value: ÇØ´ç PieceÀÇ stepIndex
+    // [ë³€ê²½] ì–´ë–¤ Pieceê°€ ëª‡ ë¼ìš´ë“œì— í•´ë‹¹í•˜ëŠ”ì§€ RoundManagerì— ì•Œë¦¬ê¸° ìœ„í•œ ë§¤í•‘
+    // key: ë¼ìš´ë“œ ë²ˆí˜¸(1ë¶€í„°), value: í•´ë‹¹ Pieceì˜ stepIndex
     private readonly Dictionary<int, int> roundToPieceStep = new Dictionary<int, int>();
 
+    // Piece ë°©ì— ë¶™ì–´ìˆëŠ” MonsterZoneì„ ìƒì„± ìˆœì„œëŒ€ë¡œ ëª¨ì•„ë‘  - ìƒì„± ì™„ë£Œ í›„ MonsterAIì— ì „ë‹¬
+    private readonly List<MonsterAI.Zone> monsterZones = new List<MonsterAI.Zone>();
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+
+    // ë¬¸ì´ ì—´ë¦¬ê±°ë‚˜ ë‹«í˜€ì„œ í†µë¡œ ìƒíƒœê°€ ë°”ë€” ë•Œë§ˆë‹¤ í˜¸ì¶œ - ë§ˆìŠ¤í„°ì—ì„œë§Œ ì‹¤ì œë¡œ ë‹¤ì‹œ êµ½ëŠ”ë‹¤.
+    // (MonsterAIê°€ ë§ˆìŠ¤í„°ì—ì„œë§Œ ë™ì‘í•˜ë¯€ë¡œ ì´ ê°±ì‹ ë„ ë§ˆìŠ¤í„°ì—ì„œë§Œ ì˜ë¯¸ ìˆìŒ)
+    public void RebuildNavMesh()
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+        if (navMeshSurface == null) return;
+
+        navMeshSurface.BuildNavMesh();
+    }
+
     // -----------------------------------------------
-    // ¾À ·Îµå ½Ã ÀÚµ¿ ½ÇÇà - ¸¶½ºÅÍ¸¸ »ı¼º
+    // ì”¬ ë¡œë“œ ì‹œ ìë™ ì‹¤í–‰ - ë§ˆìŠ¤í„°ë§Œ ìƒì„±
     // -----------------------------------------------
     private void Start()
     {
@@ -45,18 +76,19 @@ public class RoomGenerator : MonoBehaviourPunCallbacks
 
         ClearSpawned();
         currentX = 0f;
-        stepIndex = 0;            // [º¯°æ]
-        roundToPieceStep.Clear(); // [º¯°æ]
+        stepIndex = 0;            // [ë³€ê²½]
+        roundToPieceStep.Clear(); // [ë³€ê²½]
+        monsterZones.Clear();
         StartCoroutine(GenerateRooms());
     }
 
     public override void OnMasterClientSwitched(Player newMasterClient)
     {
-        Debug.Log($"[RoomGenerator] »õ ¸¶½ºÅÍ: {newMasterClient.NickName}");
+        Debug.Log($"[RoomGenerator] ìƒˆ ë§ˆìŠ¤í„°: {newMasterClient.NickName}");
     }
 
     // -----------------------------------------------
-    // °Ç¹° »ı¼º ¼ø¼­ ÄÚ·çÆ¾
+    // ê±´ë¬¼ ìƒì„± ìˆœì„œ ì½”ë£¨í‹´
     // -----------------------------------------------
     private IEnumerator GenerateRooms()
     {
@@ -65,12 +97,17 @@ public class RoomGenerator : MonoBehaviourPunCallbacks
         List<string> selectedPieces = GetRandomPieces(pieceCount);
         for (int i = 0; i < selectedPieces.Count; i++)
         {
-            int roundNumber = i + 1; // [º¯°æ] ÀÌ Piece°¡ ¸î ¶ó¿îµåÀÎÁö
+            int roundNumber = i + 1; // [ë³€ê²½] ì´ Pieceê°€ ëª‡ ë¼ìš´ë“œì¸ì§€
 
-            yield return StartCoroutine(SpawnBuilding(selectedPieces[i], doorType: DoorType.Piece));
+            GameObject spawnedPiece = null;
+            yield return StartCoroutine(SpawnBuilding(selectedPieces[i], doorType: DoorType.Piece, onSpawned: obj => spawnedPiece = obj));
 
-            // [º¯°æ] ¹æ±İ »ı¼ºÇÑ PieceÀÇ stepIndex¸¦ ¶ó¿îµå ¹øÈ£¿Í ¸ÅÇÎ
+            // [ë³€ê²½] ë°©ê¸ˆ ìƒì„±í•œ Pieceì˜ stepIndexë¥¼ ë¼ìš´ë“œ ë²ˆí˜¸ì™€ ë§¤í•‘
             roundToPieceStep[roundNumber] = stepIndex - 1;
+
+            // ì²« Piece ë°© ì•ˆì— ë¯¸ë¦¬ ì°ì–´ë‘” MonsterSpawnPoint ìœ„ì¹˜ì— MonsterRoom ìƒì„± (ë©”ì¸ í†µë¡œì—ì„œ ë²—ì–´ë‚œ ê³ê°€ì§€)
+            if (i == 0)
+                yield return StartCoroutine(SpawnMonsterRoom(spawnedPiece));
 
             bool isLastPiece = (i == selectedPieces.Count - 1);
             if (!isLastPiece)
@@ -84,25 +121,39 @@ public class RoomGenerator : MonoBehaviourPunCallbacks
             }
         }
 
-        // [º¯°æ] RoundManager¿¡ ¸ÅÇÎ Á¤º¸ Àü´Ş
+        // ëª¨ë“  ë°©(ëª¬ìŠ¤í„°ë£¸ í¬í•¨)ì´ ìƒì„±ëœ ë’¤ NavMeshë¥¼ ì²˜ìŒìœ¼ë¡œ êµ½ëŠ”ë‹¤.
+        if (navMeshSurface == null)
+            Debug.LogWarning("[RoomGenerator] navMeshSurfaceê°€ ì—°ê²°ë˜ì§€ ì•Šì•„ ëª¬ìŠ¤í„°ê°€ NavMesh ìœ„ì— ìˆì§€ ëª»í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.");
+        RebuildNavMesh();
+
+        // [ë³€ê²½] RoundManagerì— ë§¤í•‘ ì •ë³´ ì „ë‹¬
         if (RoundManager.Instance != null)
             RoundManager.Instance.SetRoundPieceStepMap(roundToPieceStep);
 
-        Debug.Log("[RoomGenerator] ¸ğµç °Ç¹° »ı¼º ¿Ï·á.");
+        if (MonsterAI.Instance != null)
+        {
+            // Piece ë°© ìˆœì„œëŒ€ë¡œ ëª¨ì•„ë‘” MonsterZone ëª©ë¡ì„ ëª¬ìŠ¤í„°ì—ê²Œ ì „ë‹¬
+            MonsterAI.Instance.SetZones(monsterZones.ToArray());
+
+            // NavMeshê°€ ë°©ê¸ˆ ìƒˆë¡œ ë§Œë“¤ì–´ì¡Œìœ¼ë‹ˆ ëª¬ìŠ¤í„°ë¥¼ ê·¸ ìœ„ì— ë‹¤ì‹œ ë°°ì¹˜í•˜ê³  FSMì„ ì‹œì‘ì‹œí‚¨ë‹¤.
+            MonsterAI.Instance.OnNavMeshReady();
+        }
+
+        Debug.Log("[RoomGenerator] ëª¨ë“  ê±´ë¬¼ ìƒì„± ì™„ë£Œ.");
     }
 
     private enum DoorType { None, Start, Piece, Shop, Ready }
 
     // -----------------------------------------------
-    // °Ç¹° »ı¼º ÈÄ DoorManager µî·ÏÀº ¸¶½ºÅÍ¸¸ Ã³¸®
-    // [º¯°æ] DoorManager µî·ÏÀ» ¸¶½ºÅÍ¿¡¼­¸¸ ÇÏµµ·Ï Á¦ÇÑ
+    // ê±´ë¬¼ ìƒì„± í›„ DoorManager ë“±ë¡ì€ ë§ˆìŠ¤í„°ë§Œ ì²˜ë¦¬
+    // [ë³€ê²½] DoorManager ë“±ë¡ì„ ë§ˆìŠ¤í„°ì—ì„œë§Œ í•˜ë„ë¡ ì œí•œ
     // -----------------------------------------------
-    private IEnumerator SpawnBuilding(string prefabName, bool isFirst = false, DoorType doorType = DoorType.None)
+    private IEnumerator SpawnBuilding(string prefabName, bool isFirst = false, DoorType doorType = DoorType.None, System.Action<GameObject> onSpawned = null)
     {
         GameObject prefab = Resources.Load<GameObject>(prefabName);
         if (prefab == null)
         {
-            Debug.LogError($"[RoomGenerator] '{prefabName}' ÇÁ¸®ÆÕÀ» Resources Æú´õ¿¡¼­ Ã£À» ¼ö ¾ø½À´Ï´Ù.");
+            Debug.LogError($"[RoomGenerator] '{prefabName}' í”„ë¦¬íŒ¹ì„ Resources í´ë”ì—ì„œ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
             yield break;
         }
 
@@ -127,7 +178,7 @@ public class RoomGenerator : MonoBehaviourPunCallbacks
         {
             spawnedObjects.Add(obj);
 
-            // ¹® Á¾·ù¿¡ µû¶ó DoorManager¿¡ µî·Ï (PieceDoor¸¦ Ã£¾Æ¼­ Àü´Ş)
+            // ë¬¸ ì¢…ë¥˜ì— ë”°ë¼ DoorManagerì— ë“±ë¡ (PieceDoorë¥¼ ì°¾ì•„ì„œ ì „ë‹¬)
             if (DoorManager.Instance != null)
             {
                 PieceDoor door = obj.GetComponentInChildren<PieceDoor>();
@@ -140,14 +191,78 @@ public class RoomGenerator : MonoBehaviourPunCallbacks
                 }
             }
 
-            // [º¯°æ] RoomTrigger¿¡ ÀÌ ¹æÀÇ ¼ø¼­ ¹øÈ£(stepIndex) ºÎ¿©
+            // [ë³€ê²½] RoomTriggerì— ì´ ë°©ì˜ ìˆœì„œ ë²ˆí˜¸(stepIndex) ë¶€ì—¬
             RoomTrigger trigger = obj.GetComponentInChildren<RoomTrigger>();
             if (trigger != null)
                 trigger.SetStepIndex(stepIndex);
 
-            stepIndex++; // [º¯°æ] ´ÙÀ½ ¹æÀ» À§ÇØ 1 Áõ°¡
+            // Piece ë°©ì´ë©´ MonsterZoneì„ ì°¾ì•„ ëª¬ìŠ¤í„° ìˆœì°° êµ¬ì—­ ëª©ë¡ì— ë“±ë¡ (ìƒì„± ìˆœì„œ = ìˆœì°° ìˆœì„œ)
+            if (doorType == DoorType.Piece)
+            {
+                MonsterZone zone = obj.GetComponentInChildren<MonsterZone>();
+                if (zone != null)
+                {
+                    monsterZones.Add(new MonsterAI.Zone
+                    {
+                        zoneName = prefabName,
+                        patrolPoints = zone.patrolPoints,
+                        zoneCenter = zone.zoneCenter,
+                        patrolRadius = zone.patrolRadius
+                    });
+                }
+            }
 
-            Debug.Log($"[RoomGenerator] '{prefabName}' »ı¼º ¿Ï·á | À§Ä¡: {spawnPos} | stepIndex: {stepIndex - 1}");
+            stepIndex++; // [ë³€ê²½] ë‹¤ìŒ ë°©ì„ ìœ„í•´ 1 ì¦ê°€
+
+            Debug.Log($"[RoomGenerator] '{prefabName}' ìƒì„± ì™„ë£Œ | ìœ„ì¹˜: {spawnPos} | stepIndex: {stepIndex - 1}");
+
+            onSpawned?.Invoke(obj);
+        }
+
+        yield return null;
+    }
+
+    // ì²« Piece ë°© ì•ˆì˜ MonsterSpawnPoint ìœ„ì¹˜ì— MonsterRoomì„ ìƒì„±í•œë‹¤.
+    // ë©”ì¸ í†µë¡œ ë°°ì¹˜(currentX ëˆ„ì )ì™€ëŠ” ë³„ê°œë¡œ, ì§€ì •ëœ ì¢Œí‘œì— ê·¸ëŒ€ë¡œ ìƒì„±ëœë‹¤.
+    private IEnumerator SpawnMonsterRoom(GameObject pieceRoom)
+    {
+        if (pieceRoom == null)
+        {
+            Debug.LogWarning("[RoomGenerator] ì²« Piece ë°©ì„ ì°¾ì§€ ëª»í•´ MonsterRoomì„ ìƒì„±í•˜ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.");
+            yield break;
+        }
+
+        MonsterSpawnPoint spawnPoint = pieceRoom.GetComponentInChildren<MonsterSpawnPoint>();
+        if (spawnPoint == null)
+        {
+            Debug.LogWarning($"[RoomGenerator] '{pieceRoom.name}'ì— MonsterSpawnPointê°€ ì—†ì–´ MonsterRoomì„ ìƒì„±í•˜ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.");
+            yield break;
+        }
+
+        GameObject prefab = Resources.Load<GameObject>(monsterRoomName);
+        if (prefab == null)
+        {
+            Debug.LogError($"[RoomGenerator] '{monsterRoomName}' í”„ë¦¬íŒ¹ì„ Resources í´ë”ì—ì„œ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
+            yield break;
+        }
+
+        // MonsterSpawnPoint ìœ„ì¹˜ë¥¼ "ì—°ê²° ì§€ì (ë¬¸)"ìœ¼ë¡œ ë³´ê³ , ë°©ì˜ ê¹Šì´(ë¡œì»¬ Z) ì ˆë°˜ë§Œí¼ forward ë°©í–¥ìœ¼ë¡œ ë°€ì–´ì„œ
+        // ì¤‘ì‹¬ì´ ì•„ë‹ˆë¼ ë²½ì´ ê·¸ ì§€ì ì— ë§ë‹¿ë„ë¡ í•œë‹¤. (Piece ë°© ë²½ê³¼ ì•ˆ ê²¹ì¹˜ê²Œ)
+        float halfDepth = GetPrefabBounds(prefab).size.z * 0.5f;
+        Vector3 spawnPos = spawnPoint.transform.position + spawnPoint.transform.forward * halfDepth;
+
+        GameObject obj = PhotonNetwork.Instantiate(monsterRoomName, spawnPos, spawnPoint.transform.rotation);
+        if (obj != null)
+        {
+            spawnedObjects.Add(obj);
+            Debug.Log($"[RoomGenerator] '{monsterRoomName}' ìƒì„± ì™„ë£Œ | ìœ„ì¹˜: {spawnPos}");
+
+            // ì´ Piece ë°©ì—ë§Œ ì‹¤ì œë¡œ MonsterRoomì´ ìƒê²¼ìœ¼ë¯€ë¡œ, ì´ ë°©ì˜ MonsterDoorë§Œ í™œì„±í™”í•œë‹¤.
+            MonsterDoor door = pieceRoom.GetComponentInChildren<MonsterDoor>();
+            if (door != null)
+                door.Activate();
+            else
+                Debug.LogWarning($"[RoomGenerator] '{pieceRoom.name}'ì— MonsterDoorê°€ ì—†ì–´ ëª¬ìŠ¤í„° ë¬¸ ì—°ì¶œì„ í™œì„±í™”í•˜ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.");
         }
 
         yield return null;
@@ -155,13 +270,18 @@ public class RoomGenerator : MonoBehaviourPunCallbacks
 
     private float GetPrefabWidth(GameObject prefab)
     {
+        return GetPrefabBounds(prefab).size.x;
+    }
+
+    private Bounds GetPrefabBounds(GameObject prefab)
+    {
         Renderer[] renderers = prefab.GetComponentsInChildren<Renderer>();
         if (renderers.Length > 0)
         {
             Bounds bounds = renderers[0].bounds;
             foreach (Renderer r in renderers)
                 bounds.Encapsulate(r.bounds);
-            return bounds.size.x;
+            return bounds;
         }
 
         Collider[] colliders = prefab.GetComponentsInChildren<Collider>();
@@ -170,11 +290,11 @@ public class RoomGenerator : MonoBehaviourPunCallbacks
             Bounds bounds = colliders[0].bounds;
             foreach (Collider c in colliders)
                 bounds.Encapsulate(c.bounds);
-            return bounds.size.x;
+            return bounds;
         }
 
-        Debug.LogWarning($"[RoomGenerator] '{prefab.name}': Å©±â¸¦ °¨ÁöÇÏÁö ¸øÇØ ±âº»°ª 10f »ç¿ë.");
-        return 10f;
+        Debug.LogWarning($"[RoomGenerator] '{prefab.name}': í¬ê¸°ë¥¼ ê°ì§€í•˜ì§€ ëª»í•´ ê¸°ë³¸ê°’ 10f ì‚¬ìš©.");
+        return new Bounds(Vector3.zero, Vector3.one * 10f);
     }
 
     private List<string> GetRandomPieces(int count)
