@@ -3,7 +3,7 @@ using UnityEngine;
 public class CharacterStat : MonoBehaviour
 {
     //여기서 이제 어떤 장비를 가지고 있는 지 확인하고 
-    public GameObject[] equips; //장비
+    public GameObject[] equips = new GameObject[2]; //장비
     IInteractable currentInteractable;
     GameObject currentItem; //보고 있는 장비
 
@@ -17,7 +17,11 @@ public class CharacterStat : MonoBehaviour
     }
     public void Interact()
     {
-        if(currentInteractable == null) return;
+        if (currentInteractable == null) 
+        {
+            Debug.Log("없음");
+            return;
+        }
         currentInteractable.OnInteract(equips);
         Debug.Log("상호작용");
     }

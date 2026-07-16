@@ -53,20 +53,27 @@ public class CharacterLook : MonoBehaviour
     public void CheckInteractable()
     {
         Ray ray = new Ray(camera.transform.position, camera.transform.forward);
-
+        Debug.DrawRay(
+camera.transform.position,
+camera.transform.forward * interactDistance,
+Color.red
+);
         if (Physics.Raycast(ray, out RaycastHit hit, interactDistance, interactLayer))
         {
+            Debug.Log("바라보는 중");
             if (currentCollider == hit.collider) return;
-
+            Debug.Log("새로운 것");
             currentCollider = hit.collider;
             
             if(currentCollider.TryGetComponent(out IInteractable co))
             {
-                IInteractable interactable = hit.collider.GetComponent<IInteractable>();
-                changeInteractable?.Invoke(interactable);
+                Debug.Log("Interactable이 있음!");
+                changeInteractable?.Invoke(co);
             }
             else
             {
+                Debug.Log("Interactable이 없음!" + hit.collider.name);
+                
                 changeItem?.Invoke(currentCollider.gameObject);
             }
 
@@ -78,5 +85,9 @@ public class CharacterLook : MonoBehaviour
             currentCollider = null;
             changeInteractable?.Invoke(null);
         }
+
+
     }
+
+
 }

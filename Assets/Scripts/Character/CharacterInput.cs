@@ -69,6 +69,7 @@ public class CharacterInput : MonoBehaviour
     {
         if(context.phase == InputActionPhase.Performed)
         {
+            Debug.Log("상호작용");
             interact?.Invoke();
         }
     }
