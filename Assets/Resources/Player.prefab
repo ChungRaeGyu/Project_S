@@ -21,6 +21,7 @@ GameObject:
   - component: {fileID: -5454605052138823259}
   - component: {fileID: 4688813357778417445}
   - component: {fileID: 9042869623193467675}
+  - component: {fileID: 8263072268908581970}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -290,3 +291,16 @@ MonoBehaviour:
   m_SynchronizeRotation: 1
   m_SynchronizeScale: 1
   m_UseLocal: 1
+--- !u!114 &8263072268908581970
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5853395068503488218}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90625cdf13a866741abc63fed4b3dea3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerNoiseSource
+  noiseSpeedThreshold: 0.1
