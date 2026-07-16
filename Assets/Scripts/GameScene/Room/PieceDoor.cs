@@ -30,6 +30,9 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
     // [º¯°æ] ºÎ¸ğÀÇ BoxCollider ÂüÁ¶
     private BoxCollider doorCollider;
 
+    // ì´ ë¬¸ì´ ì—´ë¦¬ê¸° ì‹œì‘í•  ë•Œ ë°œìƒ (ì˜ˆ: DoorManagerê°€ StartRoom ë¬¸ì— êµ¬ë…í•´ì„œ ë¼ìš´ë“œ ì‹œì‘ íŠ¸ë¦¬ê±°ë¡œ ì‚¬ìš©)
+    public event System.Action OnOpened;
+
     // -----------------------------------------------
     // DoorManager¿¡¼­ È£Ãâ - ¹öÆ° ¿¬°á ¹× À§Ä¡ ÃÊ±âÈ­
     // -----------------------------------------------
@@ -81,6 +84,7 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
     {
         Debug.Log($"[PieceDoor] RPC_OpenDoor ¼ö½Å. '{gameObject.name}'");
         if (isOpen || isMoving) return;
+        OnOpened?.Invoke();
         StartCoroutine(OpenThenClose());
     }
 
