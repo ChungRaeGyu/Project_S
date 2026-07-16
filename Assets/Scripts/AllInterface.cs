@@ -9,6 +9,11 @@ public interface IItemUse
 {
     public void Use();
 }
+public interface IDamageable
+{
+    bool IsDead { get; }
+    void TakeDamage(int amount, GameObject source);
+}
 public class AllInterface : MonoBehaviour
 {
 

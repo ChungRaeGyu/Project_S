@@ -2,20 +2,20 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// ¾À¿¡ ¹Ì¸® ¹èÄ¡µÈ 2D UI ¹öÆ°µéÀ» ·±Å¸ÀÓ¿¡ »ı¼ºµÇ´Â ¹®°ú ¿¬°áÇÕ´Ï´Ù.
+/// ì”¬ì— ë¯¸ë¦¬ ë°°ì¹˜ëœ 2D UI ë²„íŠ¼ë“¤ì„ ëŸ°íƒ€ì„ì— ìƒì„±ë˜ëŠ” ë¬¸ê³¼ ì—°ê²°í•©ë‹ˆë‹¤.
 /// </summary>
 public class DoorManager : MonoBehaviour
 {
-    [Header("StartRoom ¹® ¹öÆ°")]
+    [Header("StartRoom ë¬¸ ë²„íŠ¼")]
     [SerializeField] private Button[] startDoorButtons;
 
-    [Header("Piece ¹® ¹öÆ° (¼ø¼­´ë·Î)")]
+    [Header("Piece ë¬¸ ë²„íŠ¼ (ìˆœì„œëŒ€ë¡œ)")]
     [SerializeField] private Button[] pieceDoorButtons;
 
-    [Header("ShopRoom ¹® ¹öÆ° (¼ø¼­´ë·Î)")]
+    [Header("ShopRoom ë¬¸ ë²„íŠ¼ (ìˆœì„œëŒ€ë¡œ)")]
     [SerializeField] private Button[] shopDoorButtons;
 
-    [Header("ReadyRoom ¹® ¹öÆ° (¼ø¼­´ë·Î)")]
+    [Header("ReadyRoom ë¬¸ ë²„íŠ¼ (ìˆœì„œëŒ€ë¡œ)")]
     [SerializeField] private Button[] readyDoorButtons;
 
     private int startIndex = 0;
@@ -23,7 +23,6 @@ public class DoorManager : MonoBehaviour
     private int shopIndex = 0;
     private int readyIndex = 0;
 
-    // [º¯°æ] RoundManager¿¡¼­ Á÷Á¢ ¿­±â À§ÇØ StartRoom ¹® ÂüÁ¶ ÀúÀå
     private PieceDoor startDoor = null;
 
     public static DoorManager Instance { get; private set; }
@@ -39,13 +38,22 @@ public class DoorManager : MonoBehaviour
     }
 
     // -----------------------------------------------
-    // PieceDoor¸¦ Á÷Á¢ ¹Ş¾Æ µî·Ï
+    // PieceDoorë¥¼ ì§ì ‘ ë°›ì•„ ë“±ë¡
     // -----------------------------------------------
     public void RegisterStartDoor(PieceDoor door)
     {
-        // [º¯°æ] StartRoom ¹® ÂüÁ¶ ÀúÀå
         startDoor = door;
+        startDoor.OnOpened += HandleRoundStartDoorOpened;
         RegisterDoor(door, startDoorButtons, ref startIndex, "StartRoom");
+    }
+
+    // StartRoom ë˜ëŠ” ReadyRoom ë¬¸ì´ ì—´ë¦¬ë©´(í”Œë ˆì´ì–´ ìƒí˜¸ì‘ìš©ìœ¼ë¡œ) ë‹¤ìŒ ë¼ìš´ë“œë¥¼ ì‹œì‘í•œë‹¤.
+    // RoundManager.RoundStart()ê°€ ì•Œì•„ì„œ "ë‹¤ìŒ" ë¼ìš´ë“œë¥¼ ê³„ì‚°í•˜ê³ , ë§ˆìŠ¤í„°ì—ì„œë§Œ ì‹¤ì œë¡œ ë™ì‘í•˜ë¯€ë¡œ
+    // ì—¬ê¸°ì„œ ë³„ë„ IsMasterClient ì²´í¬ë‚˜ ë¼ìš´ë“œ ë²ˆí˜¸ ì§€ì •ì€ ë¶ˆí•„ìš”.
+    private void HandleRoundStartDoorOpened()
+    {
+        Debug.Log("[DoorManager] ë¬¸ì´ ì—´ë ¤ì„œ ë‹¤ìŒ ë¼ìš´ë“œë¥¼ ì‹œì‘í•©ë‹ˆë‹¤.");
+        RoundManager.Instance?.RoundStart();
     }
 
     public void RegisterPieceDoor(PieceDoor door)
@@ -60,39 +68,30 @@ public class DoorManager : MonoBehaviour
 
     public void RegisterReadyDoor(PieceDoor door)
     {
+        // ReadyRoom ë¬¸ì€ ì•ˆì „ì§€ëŒ€ë¥¼ ë‚˜ì™€ ë‹¤ìŒ Piece(ì‚¬ëƒ¥ êµ¬ì—­)ë¡œ ë“¤ì–´ê°€ëŠ” ë¬¸ì´ë¯€ë¡œ, ì—´ë¦¬ë©´ ë‹¤ìŒ ë¼ìš´ë“œë¥¼ ì‹œì‘í•œë‹¤.
+        door.OnOpened += HandleRoundStartDoorOpened;
         RegisterDoor(door, readyDoorButtons, ref readyIndex, "ReadyRoom");
     }
 
     // -----------------------------------------------
-    // [º¯°æ] RoundManager¿¡¼­ ¶ó¿îµå ½ÃÀÛ ½Ã StartRoom ¹®À» Á÷Á¢ ¿­±â
-    // -----------------------------------------------
-    public void OpenStartDoor()
-    {
-        if (startDoor != null)
-            startDoor.OpenDoor();
-        else
-            Debug.LogWarning("[DoorManager] StartRoom ¹®ÀÌ µî·ÏµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
-    }
-
-    // -----------------------------------------------
-    // °øÅë µî·Ï ·ÎÁ÷
+    // ê³µí†µ ë“±ë¡ ë¡œì§
     // -----------------------------------------------
     private void RegisterDoor(PieceDoor door, Button[] buttons, ref int index, string label)
     {
         if (index >= buttons.Length)
         {
-            Debug.LogWarning($"[DoorManager] {label} ¹öÆ°ÀÌ ºÎÁ·ÇÕ´Ï´Ù. '{door.gameObject.name}'¿¡ ¿¬°áÇÒ ¹öÆ°ÀÌ ¾ø½À´Ï´Ù.");
+            Debug.LogWarning($"[DoorManager] {label} ë²„íŠ¼ì´ ë¶€ì¡±í•©ë‹ˆë‹¤. '{door.gameObject.name}'ì— ì—°ê²°í•  ë²„íŠ¼ì´ ì—†ìŠµë‹ˆë‹¤.");
             door.Init(null);
             return;
         }
 
         door.Init(buttons[index]);
-        Debug.Log($"[DoorManager] {label} '{door.gameObject.name}' -> ¹öÆ°[{index}] ¿¬°á ¿Ï·á.");
+        Debug.Log($"[DoorManager] {label} '{door.gameObject.name}' -> ë²„íŠ¼[{index}] ì—°ê²° ì™„ë£Œ.");
         index++;
     }
 
     // -----------------------------------------------
-    // ¾À Àç½ÃÀÛ ½Ã ÃÊ±âÈ­
+    // ì”¬ ì¬ì‹œì‘ ì‹œ ì´ˆê¸°í™”
     // -----------------------------------------------
     public void ResetDoors()
     {
@@ -100,7 +99,7 @@ public class DoorManager : MonoBehaviour
         pieceIndex = 0;
         shopIndex = 0;
         readyIndex = 0;
-        startDoor = null; // [º¯°æ]
+        startDoor = null; // [ë³€ê²½]
 
         ResetButtons(startDoorButtons);
         ResetButtons(pieceDoorButtons);
