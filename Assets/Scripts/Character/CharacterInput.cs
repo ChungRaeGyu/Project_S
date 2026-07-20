@@ -34,9 +34,9 @@ public class CharacterInput : MonoBehaviour
         if (context.phase == InputActionPhase.Performed)
         {
             if(context.control == Keyboard.current.digit1Key)
-                itemDrop?.Invoke(1);
+                itemDrop?.Invoke(0);
             else if(context.control == Keyboard.current.digit2Key)
-                itemDrop?.Invoke(2);
+                itemDrop?.Invoke(1);
 
         }
     }

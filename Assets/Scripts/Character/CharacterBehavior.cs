@@ -1,6 +1,4 @@
 using Photon.Pun;
-using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -35,46 +33,50 @@ public class CharacterBehavior : MonoBehaviour
     }
     internal void OnMouseButton(InputAction.CallbackContext context)
     {
-        if (context.control == Mouse.current.leftButton)
+        int num = context.control == Mouse.current.leftButton ? 0 : 1;
+
+        if (stat.equips[num] == null) return;
+        if(stat.equips[num].TryGetComponent<IItemUse>(out var itemUse))
         {
-            if (stat.equips[0] == null) return;
-            if (stat.equips[0].TryGetComponent<IItemUse>(out var itemUse))
-            {
-                itemUse.Use();
-            }
-        }
-        else if (context.control == Mouse.current.rightButton)
-        {
-            if (stat.equips[1] == null) return;
-            if (stat.equips[1].TryGetComponent<IItemUse>(out var itemUse))
-            {
-                itemUse.Use();
-            }
+            //뭔가 광클 방지가 필요할 꺼 같 긴해
+            itemUse.Use();
+            RemoveItem(num);
         }
     }
 
     public void GetItem()
     {
+        if(stat.GetcurrentItem()==null) return;
         //아이템키는 E, 상점에서 소환후 땅에 떨어뜨리기
         if (stat.equips[1] != null)
         {
-            RemoveItem(1);
+            DropItem(1);
         }
         int num = stat.equips[0] == null ? 0 : 1;
         stat.equips[num] = stat.GetcurrentItem();
+        stat.equips[num].GetComponent<ItemBasic>().Setting(num,transform.gameObject);
     }
 
-    public void RemoveItem(int num)
+    public void DropItem(int num)
     {
         if (stat.equips[num] != null)
         {
             //무기 프리펩을 드랍시켜야한다.   
+            stat.equips[num].transform.SetParent(null);
+            stat.equips[num].GetComponent<Rigidbody>().useGravity = true;
             stat.equips[num] = null;
+            Debug.Log("아이템 드랍");
+
         }
-        //키를 1번, 2번으로 구분
         //아이템 버리기 만들기
     }
-    //아이템의 부모를 없애고 중력을 주는 방식으로 떨군다.
-
-    //각자 아이템에 위치값을 가지고 있을 것이다.
+    public void RemoveItem(int num)
+    {
+        //아이템 사용시 삭제 시키기
+        if (stat.equips[num] != null)
+        {
+            PhotonNetwork.Destroy(stat.equips[num]);
+            stat.equips[num] = null;
+        }
+    }
 }

@@ -54,7 +54,7 @@ public class CharacterManager : MonoBehaviour
     }
     private void ItemDrop()
     {
-        characterInput.itemDrop += characterBehavior.RemoveItem;
+        characterInput.itemDrop += characterBehavior.DropItem;
 
     }
     private void OnDisable()
