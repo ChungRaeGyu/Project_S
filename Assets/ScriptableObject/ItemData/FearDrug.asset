@@ -10,10 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d4948999b163c194aaa7078dc525cb3c, type: 3}
-  m_Name: FlashLight
+  m_Name: FearDrug
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemID: 1
-  itemName: FlashLight
-  description: can look front in night
-  price: 3
-  icon: {fileID: 21300000, guid: 880eecd0744785345b400e9d5e23de27, type: 3}
+  itemID: 3
+  itemName: "\uACF5\uD3EC\uC57D"
+  description: "\uACF5\uD3EC\uC2EC\uC744 \uD68C\uBCF5\uD569\uB2C8\uB2E4."
+  price: 5
+  icon: {fileID: 21300000, guid: 91a974ebfab2647488e8ea0e5df758b6, type: 3}
+  position:
+  - {x: -1, y: -0.5, z: 0}
+  - {x: 1, y: -0.5, z: 0}
+  rotation:
+  - {x: -90, y: 90, z: 0}
+  - {x: -90, y: 90, z: 0}

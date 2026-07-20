@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 
 public class CharacterBehavior : MonoBehaviour
 {
-    [SerializeField] private float speed=10f;
+    
     private Vector2 input;
     Rigidbody rd;
     CharacterStat stat;
@@ -25,7 +25,7 @@ public class CharacterBehavior : MonoBehaviour
     {
        //Vector3 movement = new Vector3(input.x, 0, input.y) * speed;
        Vector3 movement = transform.forward*input.y + transform.right * input.x;
-        rd.linearVelocity = movement*speed;
+        rd.linearVelocity = movement*stat.speed;
     }
     private void FixedUpdate()
     {
@@ -63,7 +63,9 @@ public class CharacterBehavior : MonoBehaviour
         {
             //무기 프리펩을 드랍시켜야한다.   
             stat.equips[num].transform.SetParent(null);
-            stat.equips[num].GetComponent<Rigidbody>().useGravity = true;
+            var rigid = stat.equips[num].GetComponent<Rigidbody>();
+            rigid.isKinematic = false;
+            rigid.useGravity = true;
             stat.equips[num] = null;
             Debug.Log("아이템 드랍");
 
