@@ -18,7 +18,7 @@ public class SpawnManager : MonoBehaviour
         if (PhotonNetwork.IsMasterClient)
         {
             //대충 반복문 아이템 있는거 다 스폰
-            ItemSpawn(itemDatabase.items[0].itemName, spawnPos[0]);
+            //ItemSpawn(itemDatabase.items[0].itemName, spawnPos[0]);
         }
     }
 

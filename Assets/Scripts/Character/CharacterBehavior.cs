@@ -21,16 +21,13 @@ public class CharacterBehavior : MonoBehaviour
     {
         input = moveInput;
     }
-    private void Move()
+    public void Move()
     {
        //Vector3 movement = new Vector3(input.x, 0, input.y) * speed;
        Vector3 movement = transform.forward*input.y + transform.right * input.x;
         rd.linearVelocity = movement*stat.speed;
     }
-    private void FixedUpdate()
-    {
-        Move();
-    }
+
     internal void OnMouseButton(InputAction.CallbackContext context)
     {
         int num = context.control == Mouse.current.leftButton ? 0 : 1;
