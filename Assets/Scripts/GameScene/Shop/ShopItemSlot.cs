@@ -1,6 +1,7 @@
+using Photon.Pun;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 /// <summary>
 /// 상점 아이템 슬롯 하나의 UI를 담당하는 스크립트.
@@ -47,7 +48,7 @@ public class ShopItemSlot : MonoBehaviour
         if (success)
         {
             Debug.Log($"[ShopItemSlot] '{itemData.itemName}' 구매 완료!");
-            // TODO: 인벤토리에 아이템 추가 로직 (인벤토리 구현 후 연동)
+            //여기 PhotonNetwork.instantiate(itemData.itemName)
         }
         else
         {
