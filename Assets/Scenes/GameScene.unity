@@ -3106,6 +3106,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9851a33c3af9d9a4b8d8dcffd172adf7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpawnManager
+  itemDatabase: {fileID: 11400000, guid: 544c0a40293796e4a80366e897d2b077, type: 2}
+  spawnPos: []
 --- !u!1 &1589198955
 GameObject:
   m_ObjectHideFlags: 0
