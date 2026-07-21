@@ -1,0 +1,135 @@
+using System.Collections;
+using UnityEngine;
+using UnityEngine.AI;
+
+// 미지 차원 전용 추적자. MonsterAI의 탐지(시야+청각)/이동/공격 로직을 같은 방식으로 재사용하되,
+// 라운드/구역/문 같은 개념 없이 "돌아다니다가 -> 발견하면 쫓기"만 반복하는 단순한 상태머신.
+// 순수 로컬 인스턴스(미지 차원)에서만 존재하므로 Photon 동기화가 필요 없다.
+[RequireComponent(typeof(NavMeshAgent))]
+public class ClickerAI : MonoBehaviour
+{
+    enum State { Wander, Chase }
+
+    [Header("이동 범위")]
+    public Transform[] wanderPoints;
+
+    [Header("Speed")]
+    public float wanderSpeed = 2f;
+    public float chaseSpeed = 5f;
+
+    [Header("Vision (눈)")]
+    public Transform eyes;
+    public float viewDistance = 8f;
+    [Range(0f, 360f)] public float viewAngle = 100f;
+    public LayerMask obstacleMask;
+
+    [Header("Hearing (귀)")]
+    public float hearingRadius = 10f;
+
+    [Header("Attack")]
+    public int attackDamage = 10;
+    public float attackRange = 1.5f;
+    public float attackCooldown = 1f;
+
+    [Tooltip("추적 중 이 시간(초) 동안 시야에 안 잡히면 다시 배회 상태로")]
+    public float loseSightTimeout = 4f;
+
+    NavMeshAgent agent;
+    Transform player;
+    PlayerNoiseSource playerNoise;
+    State state;
+    int wanderIndex;
+    Coroutine stateRoutine;
+
+    void Awake()
+    {
+        agent = GetComponent<NavMeshAgent>();
+        if (eyes == null) eyes = transform;
+    }
+
+    // UnknownWorld가 스폰 직후 호출
+    public void Begin(Transform targetPlayer)
+    {
+        player = targetPlayer;
+        playerNoise = player.GetComponent<PlayerNoiseSource>();
+
+        if (stateRoutine != null) StopCoroutine(stateRoutine);
+        stateRoutine = StartCoroutine(Wander());
+    }
+
+    IEnumerator Wander()
+    {
+        state = State.Wander;
+        agent.speed = wanderSpeed;
+        GoToNextWanderPoint();
+
+        while (state == State.Wander)
+        {
+            if (!agent.pathPending && agent.remainingDistance < 0.5f)
+                GoToNextWanderPoint();
+
+            if (IsVisible() || IsHeard())
+            {
+                stateRoutine = StartCoroutine(Chase());
+                yield break;
+            }
+
+            yield return null;
+        }
+    }
+
+    IEnumerator Chase()
+    {
+        state = State.Chase;
+        agent.speed = chaseSpeed;
+
+        float attackTimer = 0f;
+        float timeSinceLastSeen = 0f;
+
+        while (state == State.Chase)
+        {
+            TrySetDestination(player.position);
+
+            attackTimer -= Time.deltaTime;
+            if (Vector3.Distance(transform.position, player.position) <= attackRange && attackTimer <= 0f)
+            {
+                TryAttack();
+                attackTimer = attackCooldown;
+            }
+
+            if (IsVisible())
+                timeSinceLastSeen = 0f;
+            else
+                timeSinceLastSeen += Time.deltaTime;
+
+            if (timeSinceLastSeen >= loseSightTimeout)
+            {
+                stateRoutine = StartCoroutine(Wander());
+                yield break;
+            }
+
+            yield return null;
+        }
+    }
+
+    void GoToNextWanderPoint()
+    {
+        if (wanderPoints == null || wanderPoints.Length == 0) return;
+        agent.SetDestination(wanderPoints[wanderIndex].position);
+        wanderIndex = (wanderIndex + 1) % wanderPoints.Length;
+    }
+
+    bool TrySetDestination(Vector3 worldPosition) => AiPerception.TrySetDestination(agent, worldPosition);
+
+    bool IsVisible() => AiPerception.CanSeeTarget(eyes, player, viewDistance, viewAngle, obstacleMask);
+
+    bool IsHeard() => AiPerception.CanHearTarget(transform.position, player, playerNoise, hearingRadius);
+
+    void TryAttack() => AiPerception.TryAttack(player, attackDamage, gameObject);
+
+    void OnDrawGizmosSelected()
+    {
+        AiPerception.DrawHearingGizmo(transform.position, hearingRadius);
+        AiPerception.DrawVisionGizmo(eyes != null ? eyes : transform, viewDistance, viewAngle);
+    }
+}

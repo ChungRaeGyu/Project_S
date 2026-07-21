@@ -461,15 +461,7 @@ public class MonsterAI : MonoBehaviourPun
         yield return null;
     }
 
-    // 플레이어 위치 등 NavMesh 위에 정확히 있다는 보장이 없는 좌표로 목적지를 설정할 때 사용.
-    // 가까운 NavMesh 지점으로 스냅한 뒤 시도하고, 실패하면 false를 반환한다(호출부에서 다음 프레임에 재시도 가능).
-    bool TrySetDestination(Vector3 worldPosition)
-    {
-        if (NavMesh.SamplePosition(worldPosition, out NavMeshHit hit, 3f, NavMesh.AllAreas))
-            return agent.SetDestination(hit.position);
-
-        return false;
-    }
+    bool TrySetDestination(Vector3 worldPosition) => AiPerception.TrySetDestination(agent, worldPosition);
 
     void GoToNextPatrolPoint()
     {
@@ -546,20 +538,7 @@ public class MonsterAI : MonoBehaviourPun
         return found != null;
     }
 
-    bool IsVisible(Transform p)
-    {
-        Vector3 toPlayer = p.position - eyes.position;
-        float distance = toPlayer.magnitude;
-        if (distance > viewDistance) return false;
-
-        float angle = Vector3.Angle(eyes.forward, toPlayer);
-        if (angle > viewAngle * 0.5f) return false;
-
-        if (Physics.Raycast(eyes.position, toPlayer.normalized, out _, distance, obstacleMask))
-            return false;
-
-        return true;
-    }
+    bool IsVisible(Transform p) => AiPerception.CanSeeTarget(eyes, p, viewDistance, viewAngle, obstacleMask);
 
     bool TryHearPlayer(out Vector3 heardPos)
     {
@@ -570,10 +549,10 @@ public class MonsterAI : MonoBehaviourPun
         foreach (Transform p in GetActivePlayers())
         {
             PlayerNoiseSource noise = p.GetComponent<PlayerNoiseSource>();
-            if (noise == null || !noise.IsMakingNoise) continue;
+            if (!AiPerception.CanHearTarget(transform.position, p, noise, hearingRadius)) continue;
 
             float d = Vector3.Distance(transform.position, p.position);
-            if (d <= hearingRadius && d < bestDist)
+            if (d < bestDist)
             {
                 bestDist = d;
                 heardPos = p.position;
@@ -592,29 +571,12 @@ public class MonsterAI : MonoBehaviourPun
         return damageable != null && damageable.IsDead;
     }
 
-    void TryAttack(Transform t)
-    {
-        IDamageable damageable = t.GetComponent<IDamageable>();
-        if (damageable == null)
-        {
-            Debug.LogWarning($"[MonsterAI] '{t.name}'에 IDamageable 구현이 없어 공격이 무시됩니다.");
-            return;
-        }
-        damageable.TakeDamage(attackDamage, gameObject);
-    }
+    void TryAttack(Transform t) => AiPerception.TryAttack(t, attackDamage, gameObject);
 
     void OnDrawGizmosSelected()
     {
         Transform e = eyes != null ? eyes : transform;
-
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, hearingRadius);
-
-        Gizmos.color = Color.red;
-        Vector3 left = Quaternion.Euler(0, -viewAngle * 0.5f, 0) * e.forward * viewDistance;
-        Vector3 right = Quaternion.Euler(0, viewAngle * 0.5f, 0) * e.forward * viewDistance;
-        Gizmos.DrawLine(e.position, e.position + left);
-        Gizmos.DrawLine(e.position, e.position + right);
-        Gizmos.DrawLine(e.position, e.position + e.forward * viewDistance);
+        AiPerception.DrawHearingGizmo(transform.position, hearingRadius);
+        AiPerception.DrawVisionGizmo(e, viewDistance, viewAngle);
     }
 }

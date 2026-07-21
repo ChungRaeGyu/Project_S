@@ -20,6 +20,7 @@ GameObject:
   - component: {fileID: 7530240273478609949}
   - component: {fileID: -5454605052138823259}
   - component: {fileID: 4688813357778417445}
+  - component: {fileID: 2070777990199901902}
   - component: {fileID: 9042869623193467675}
   - component: {fileID: 8263072268908581970}
   m_Layer: 0
@@ -275,6 +276,19 @@ MonoBehaviour:
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
+--- !u!114 &2070777990199901902
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5853395068503488218}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4bef706256a099245872c0eeb64ca865, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FearDimensionController
+  unknownWorldPrefab: {fileID: 0}
 --- !u!114 &9042869623193467675
 MonoBehaviour:
   m_ObjectHideFlags: 0
