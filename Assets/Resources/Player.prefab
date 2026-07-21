@@ -292,7 +292,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bef706256a099245872c0eeb64ca865, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FearDimensionController
-  unknownWorldPrefab: {fileID: 0}
+  unknownWorldPrefab: {fileID: 4688044958922910254, guid: 98f38afa58c195741a69b0b396ffe851, type: 3}
   dimensionWorldPosition: {x: 0, y: -2000, z: 0}
 --- !u!114 &9042869623193467675
 MonoBehaviour:
