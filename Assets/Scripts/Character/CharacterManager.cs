@@ -34,7 +34,7 @@ public class CharacterManager : MonoBehaviour
         ItemInteract();
         ItemDrop();
         characterInput.OnMouseButton += characterBehavior.OnMouseButton;
-        
+        stat.StatUpdate();
     }
     private void Interact()
     {

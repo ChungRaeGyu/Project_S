@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 public class CharacterStat : MonoBehaviour, IDamageable
@@ -10,6 +11,8 @@ public class CharacterStat : MonoBehaviour, IDamageable
 
     [SerializeField]private int hp = 100;
     public int fear = 100;
+    [SerializeField] float fearturm = 3f;
+    [SerializeField] int fearmount = 1;
     public float speed = 10f;
 
     public bool IsDead => throw new System.NotImplementedException();
@@ -50,5 +53,18 @@ public class CharacterStat : MonoBehaviour, IDamageable
     {
         hp += recovery;
         hp = Math.Min(hp, 100);
+    }
+    public void StatUpdate()
+    {
+        StartCoroutine(CStatUpdate());
+    }
+    IEnumerator CStatUpdate()
+    {
+        while (hp>0)
+        {
+            yield return new WaitForSecondsRealtime(fearturm);
+            fear -= fearmount;
+            yield return new WaitUntil(()=> fear > 0);
+        }
     }
 }
