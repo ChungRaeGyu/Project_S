@@ -7,6 +7,7 @@ public class CharacterManager : MonoBehaviour
     CharacterBehavior characterBehavior;
     CharacterLook characterLook;
     CharacterStat stat;
+    FearDimensionController fearDimensionController;
     PhotonView pv;
     private void Awake()
     {
@@ -17,7 +18,7 @@ public class CharacterManager : MonoBehaviour
         characterBehavior = GetComponent<CharacterBehavior>();
         characterLook = GetComponent<CharacterLook>();
         stat = GetComponent<CharacterStat>();
-
+        fearDimensionController = GetComponent<FearDimensionController>();
         characterBehavior.Init(stat);
         characterInput.InputSetting();
 
@@ -33,6 +34,7 @@ public class CharacterManager : MonoBehaviour
         Interact();
         ItemInteract();
         ItemDrop();
+        stat.Onfear += fearDimensionController.EnterDimension;
         characterInput.OnMouseButton += characterBehavior.OnMouseButton;
         stat.StatUpdate();
     }

@@ -10,9 +10,11 @@ public class CharacterStat : MonoBehaviour, IDamageable
     GameObject currentItem; //보고 있는 장비
 
     [SerializeField]private int hp = 100;
-    public int fear = 100;
-    [SerializeField] float fearturm = 3f;
+    public int fear = 3;
+    [SerializeField] float fearturm = 1f;
     [SerializeField] int fearmount = 1;
+    public event Action Onfear;
+    
     public float speed = 10f;
 
     public bool IsDead => throw new System.NotImplementedException();
@@ -63,7 +65,11 @@ public class CharacterStat : MonoBehaviour, IDamageable
         while (hp>0)
         {
             yield return new WaitForSecondsRealtime(fearturm);
-            fear -= fearmount;
+            fear = Math.Max(fear - fearmount, 0);
+            if (fear == 0)
+            {
+                Onfear?.Invoke();
+            }
             yield return new WaitUntil(()=> fear > 0);
         }
     }

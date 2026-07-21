@@ -218,7 +218,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74dfa2358f715144eb09cc0aeef694f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterBehavior
-  speed: 10
 --- !u!114 &7530240273478609949
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -253,6 +252,11 @@ MonoBehaviour:
   equips:
   - {fileID: 0}
   - {fileID: 0}
+  hp: 100
+  fear: 5
+  fearturm: 1
+  fearmount: 1
+  speed: 10
 --- !u!114 &4688813357778417445
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -289,6 +293,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FearDimensionController
   unknownWorldPrefab: {fileID: 0}
+  dimensionWorldPosition: {x: 0, y: -2000, z: 0}
 --- !u!114 &9042869623193467675
 MonoBehaviour:
   m_ObjectHideFlags: 0
