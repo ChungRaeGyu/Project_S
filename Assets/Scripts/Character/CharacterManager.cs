@@ -13,7 +13,7 @@ public class CharacterManager : MonoBehaviour
     {
         pv = GetComponent<PhotonView>();
 
-        //if (!pv.IsMine) this.enabled = false;
+        if (!pv.IsMine) { this.enabled = false; return; }
         characterInput = GetComponent<CharacterInput>();
         characterBehavior = GetComponent<CharacterBehavior>();
         characterLook = GetComponent<CharacterLook>();
@@ -37,6 +37,10 @@ public class CharacterManager : MonoBehaviour
         stat.Onfear += fearDimensionController.EnterDimension;
         characterInput.OnMouseButton += characterBehavior.OnMouseButton;
         stat.StatUpdate();
+    }
+    private void FixedUpdate()
+    {
+        characterBehavior.Move();
     }
     private void Interact()
     {
