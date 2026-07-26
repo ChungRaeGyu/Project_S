@@ -71,6 +71,7 @@ MonoBehaviour:
   openHeight: 4
   openDuration: 1
   closeDelay: 10
+  requiredItem: {fileID: 0}
   doorChild: {fileID: 941795280615046547}
 --- !u!114 &619130769866211710
 MonoBehaviour:
@@ -148,7 +149,11 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
+<<<<<<< Updated upstream
   m_Size: {x: 1, y: 1, z: 1}
+=======
+  m_Size: {x: 0.8, y: 1, z: 0.8}
+>>>>>>> Stashed changes
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!33 &9163034145209850548
 MeshFilter:

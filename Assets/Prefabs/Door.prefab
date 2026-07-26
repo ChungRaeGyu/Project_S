@@ -71,6 +71,7 @@ MonoBehaviour:
   openHeight: 4
   openDuration: 1
   closeDelay: 10
+  requiredItem: {fileID: 0}
   doorChild: {fileID: 941795280615046547}
 --- !u!114 &619130769866211710
 MonoBehaviour:

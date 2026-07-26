@@ -47,6 +47,10 @@ public class RoomGenerator : MonoBehaviourPunCallbacks
     // Piece 방에 붙어있는 MonsterZone을 생성 순서대로 모아둠 - 생성 완료 후 MonsterAI에 전달
     private readonly List<MonsterAI.Zone> monsterZones = new List<MonsterAI.Zone>();
 
+    // stepIndex -> 생성된 방 오브젝트. RoundManager가 "라운드 N의 ReadyRoom" 같은 특정 방을 찾을 때 사용.
+    // (MonsterRoom은 stepIndex가 없어서 여기 포함되지 않음)
+    private readonly Dictionary<int, GameObject> roomsByStepIndex = new Dictionary<int, GameObject>();
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -55,6 +59,12 @@ public class RoomGenerator : MonoBehaviourPunCallbacks
             return;
         }
         Instance = this;
+    }
+
+    // stepIndex로 생성된 방 오브젝트를 찾는다 (없으면 null).
+    public GameObject GetRoomByStepIndex(int stepIndex)
+    {
+        return roomsByStepIndex.TryGetValue(stepIndex, out GameObject room) ? room : null;
     }
 
     // 문이 열리거나 닫혀서 통로 상태가 바뀔 때마다 호출 - 마스터에서만 실제로 다시 굽는다.
@@ -79,6 +89,7 @@ public class RoomGenerator : MonoBehaviourPunCallbacks
         stepIndex = 0;            // [변경]
         roundToPieceStep.Clear(); // [변경]
         monsterZones.Clear();
+        roomsByStepIndex.Clear();
         StartCoroutine(GenerateRooms());
     }
 
@@ -195,6 +206,8 @@ public class RoomGenerator : MonoBehaviourPunCallbacks
             RoomTrigger trigger = obj.GetComponentInChildren<RoomTrigger>();
             if (trigger != null)
                 trigger.SetStepIndex(stepIndex);
+
+            roomsByStepIndex[stepIndex] = obj;
 
             // Piece 방이면 MonsterZone을 찾아 몬스터 순찰 구역 목록에 등록 (생성 순서 = 순찰 순서)
             if (doorType == DoorType.Piece)

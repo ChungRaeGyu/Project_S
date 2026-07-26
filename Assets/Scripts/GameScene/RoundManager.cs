@@ -20,6 +20,9 @@ public class RoundManager : MonoBehaviourPun
     [Header("UI")]
     [SerializeField] private TMP_Text timerText;
 
+    [Tooltip("같은 플레이어가 라운드 시간 초과를 두 번째 이상 겪으면 켜지는 검은 화면 패널")]
+    [SerializeField] private GameObject blackScreenPanel;
+
     public int CurrentRound { get; private set; } = 0;
     public float RemainingTime { get; private set; } = 0f;
 
@@ -30,6 +33,9 @@ public class RoundManager : MonoBehaviourPun
 
     // 씬에 있는 모든 플레이어 목록
     private readonly List<GameObject> allPlayers = new List<GameObject>();
+
+    // 라운드 시간 초과로 처리된 적 있는 플레이어 집합 - 최초 1회는 텔레포트, 그다음부터는 검은 화면
+    private readonly HashSet<GameObject> hasBeenLateOnce = new HashSet<GameObject>();
 
     // [변경] 라운드 번호 -> 해당 라운드 Piece방의 stepIndex
     // RoomGenerator가 생성 완료 후 채워줌
@@ -51,6 +57,12 @@ public class RoundManager : MonoBehaviourPun
             return;
         }
         Instance = this;
+    }
+
+    private void Start()
+    {
+        if (blackScreenPanel != null)
+            blackScreenPanel.SetActive(false);
     }
 
     private void Update()
@@ -191,12 +203,55 @@ public class RoundManager : MonoBehaviourPun
     }
 
     // -----------------------------------------------
-    // 해당 라운드 Piece방 또는 그 이전 방에 남아있는 플레이어에게만 실행
-    // 나중에 이 안에 처리 로직 추가
+    // 해당 라운드 Piece방 또는 그 이전 방에 남아있는 플레이어에게만 실행.
+    // 최초 1회는 다음 ShopRoom으로 강제 이동, 두 번째부터는 검은 화면 표시.
+    // allPlayers는 모든 클라이언트에서 동일하게 순회되므로, 실제 처리는 본인 소유 오브젝트에서만 한다.
     // -----------------------------------------------
     public void OnRoundTimeUp(GameObject player)
     {
         Debug.Log($"[RoundManager] OnRoundTimeUp() - '{player.name}'이 {CurrentRound}라운드 진행에 뒤처짐.");
-        // TODO: 처리 로직 추가
+
+        PhotonView playerPv = player.GetComponent<PhotonView>();
+        if (playerPv == null || !playerPv.IsMine) return;
+
+        if (hasBeenLateOnce.Add(player))
+        {
+            TeleportToNextShopRoom(player);
+        }
+        else
+        {
+            if (blackScreenPanel != null)
+                blackScreenPanel.SetActive(true);
+        }
+    }
+
+    // -----------------------------------------------
+    // 현재 라운드 Piece방 기준 다음 ShopRoom(Piece -> ShopRoom)으로 순간이동
+    // -----------------------------------------------
+    private void TeleportToNextShopRoom(GameObject player)
+    {
+        if (!roundToPieceStep.TryGetValue(CurrentRound, out int pieceStep))
+        {
+            Debug.LogWarning($"[RoundManager] {CurrentRound}라운드의 Piece stepIndex를 찾지 못해 텔레포트하지 못했습니다.");
+            return;
+        }
+
+        if (RoomGenerator.Instance == null)
+        {
+            Debug.LogWarning("[RoundManager] RoomGenerator.Instance가 없어 텔레포트하지 못했습니다.");
+            return;
+        }
+
+        int shopStep = pieceStep + 1; // Piece -> ShopRoom
+        GameObject shopRoom = RoomGenerator.Instance.GetRoomByStepIndex(shopStep);
+
+        if (shopRoom == null)
+        {
+            Debug.LogWarning($"[RoundManager] stepIndex {shopStep}에 해당하는 ShopRoom을 찾지 못했습니다 (마지막 라운드는 ShopRoom이 없음).");
+            return;
+        }
+
+        player.transform.position = shopRoom.transform.position;
+        Debug.Log($"[RoundManager] '{player.name}'을 다음 ShopRoom(stepIndex {shopStep})으로 이동시켰습니다.");
     }
 }

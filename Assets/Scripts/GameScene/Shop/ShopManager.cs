@@ -1,29 +1,31 @@
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
 
 /// <summary>
-/// 상점 UI를 관리하는 스크립트.
-/// ItemDatabase에 등록된 아이템을 GridLayoutGroup에 자동으로 슬롯 생성.
-/// 상호작용 키로 열기/닫기.
-/// 새 아이템을 ItemDatabase에 추가하면 자동으로 슬롯이 늘어납니다.
+/// 씬에 하나만 존재하는 공용 상점 UI 컨트롤러.
+/// ShopRoom마다 있는 ShopInteractable이 상호작용 시 이걸 통해 열림 - 구매 목록은 그 상점 것으로,
+/// 판매 목록은 상호작용한 플레이어의 장비(equips)로 채운다.
+/// (파일명/클래스명은 기존 씬에 이미 연결돼있을 Inspector 참조가 깨지지 않도록 ShopManager로 유지)
 /// </summary>
 public class ShopManager : MonoBehaviour
 {
     [Header("상점 UI")]
-    [SerializeField] private GameObject shopUI;         // 상점 전체 UI 패널
-    [SerializeField] private Transform gridContent;    // GridLayoutGroup이 붙은 오브젝트
+    [SerializeField] private GameObject shopUI;
 
-    [Header("아이템 슬롯 프리팹")]
-    [SerializeField] private ShopItemSlot slotPrefab;  // 슬롯 프리팹
+    [Header("구매 목록")]
+    [SerializeField] private Transform buyGridContent;
+    [SerializeField] private ShopItemSlot buySlotPrefab;
 
-    [Header("진열할 아이템 (Inspector에서 직접 추가)")]
-    [SerializeField] private List<ItemData> shopItems = new List<ItemData>(); // [변경] 상점에 진열할 아이템만 수동으로 지정
+    [Header("판매 목록")]
+    [SerializeField] private Transform sellGridContent;
+    [SerializeField] private SellItemSlot sellSlotPrefab;
 
-    private bool isOpen = false;
-    private readonly List<ShopItemSlot> spawnedSlots = new List<ShopItemSlot>();
+    private readonly List<ShopItemSlot> buySlots = new List<ShopItemSlot>();
+    private readonly List<SellItemSlot> sellSlots = new List<SellItemSlot>();
 
-    // 싱글톤
+    private ShopInteractable currentShop;
+    private GameObject[] currentEquips;
+
     public static ShopManager Instance { get; private set; }
 
     private void Awake()
@@ -38,79 +40,146 @@ public class ShopManager : MonoBehaviour
 
     private void Start()
     {
-        // 시작 시 상점 UI 닫기
         if (shopUI != null)
             shopUI.SetActive(false);
-
-        // 아이템 슬롯 자동 생성
-        BuildShopSlots();
     }
 
     // -----------------------------------------------
-    // ItemDatabase의 아이템을 GridLayout에 슬롯으로 자동 생성
-    // 새 아이템 추가 시 자동으로 슬롯 늘어남
+    // ShopInteractable.OnInteract에서 호출
     // -----------------------------------------------
-    private void BuildShopSlots()
+    public bool IsOpenFor(ShopInteractable shop)
     {
-        if (slotPrefab == null)
-        {
-            Debug.LogWarning("[ShopManager] 슬롯 프리팹이 연결되지 않았습니다.");
-            return;
-        }
+        return shopUI != null && shopUI.activeSelf && currentShop == shop;
+    }
 
-        // 기존 슬롯 전부 제거
-        foreach (ShopItemSlot slot in spawnedSlots)
+    public void Open(ShopInteractable shop, GameObject[] equips)
+    {
+        currentShop = shop;
+        currentEquips = equips;
+
+        BuildBuySlots();
+        RefreshSellSlots();
+
+        if (shopUI != null)
+            shopUI.SetActive(true);
+
+        // UI 클릭이 가능하도록 커서 잠금 해제
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public void Close()
+    {
+        currentShop = null;
+        currentEquips = null;
+
+        if (shopUI != null)
+            shopUI.SetActive(false);
+
+        // CharacterLook.Set()과 동일한 평상시(게임플레이) 커서 상태로 복귀
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = true;
+    }
+
+    // -----------------------------------------------
+    // 구매 목록 - 현재 상점(currentShop)의 판매 아이템으로 채움
+    // -----------------------------------------------
+    private void BuildBuySlots()
+    {
+        foreach (ShopItemSlot slot in buySlots)
         {
             if (slot != null)
                 Destroy(slot.gameObject);
         }
-        spawnedSlots.Clear();
+        buySlots.Clear();
 
-        // [변경] shopItems 목록에 있는 아이템만 슬롯 생성
-        foreach (ItemData item in shopItems)
+        if (currentShop == null || buySlotPrefab == null) return;
+
+        foreach (ItemData item in currentShop.ShopItems)
         {
             if (item == null) continue;
 
-            ShopItemSlot slot = Instantiate(slotPrefab, gridContent);
-            slot.Init(item);
-            spawnedSlots.Add(slot);
+            ShopItemSlot slot = Instantiate(buySlotPrefab, buyGridContent);
+            slot.Init(item, this);
+            buySlots.Add(slot);
+        }
+    }
+
+    // -----------------------------------------------
+    // 판매 목록 - 상호작용한 플레이어의 equips로 채움. 판매/구매 후 갱신용으로 공개.
+    // -----------------------------------------------
+    public void RefreshSellSlots()
+    {
+        foreach (SellItemSlot slot in sellSlots)
+        {
+            if (slot != null)
+                Destroy(slot.gameObject);
+        }
+        sellSlots.Clear();
+
+        if (currentEquips == null || sellSlotPrefab == null) return;
+
+        foreach (GameObject equip in currentEquips)
+        {
+            if (equip == null) continue;
+
+            ItemBasic item = equip.GetComponent<ItemBasic>();
+            if (item == null || item.itemData == null) continue;
+
+            SellItemSlot slot = Instantiate(sellSlotPrefab, sellGridContent);
+            slot.Init(equip, item.itemData, this);
+            sellSlots.Add(slot);
+        }
+    }
+
+    // -----------------------------------------------
+    // ShopItemSlot(구매 버튼)에서 호출
+    // -----------------------------------------------
+    public void BuyItem(ItemData itemData)
+    {
+        if (itemData == null || currentShop == null) return;
+        if (GoldManager.Instance == null) return;
+
+        bool success = GoldManager.Instance.SpendGold(itemData.price);
+        if (!success)
+        {
+            Debug.Log($"[ShopManager] 골드 부족! '{itemData.itemName}' 구매 실패.");
+            return;
         }
 
-        Debug.Log($"[ShopManager] 슬롯 {spawnedSlots.Count}개 생성 완료.");
-    }
-
-    // -----------------------------------------------
-    // 상점 열기/닫기 토글
-    // -----------------------------------------------
-    private void ToggleShop()
-    {
-        if (isOpen)
-            CloseShop();
+        Transform dropPoint = currentShop.DropPoint;
+        if (dropPoint != null && SpawnManager.Instance != null)
+        {
+            SpawnManager.Instance.ItemSpawn(itemData.itemName, dropPoint);
+            Debug.Log($"[ShopManager] '{itemData.itemName}' 구매 완료, 상점 앞에 생성.");
+        }
         else
-            OpenShop();
-    }
-
-    public void OpenShop()
-    {
-        if (shopUI == null) return;
-        isOpen = true;
-        shopUI.SetActive(true);
-        Debug.Log("[ShopManager] 상점 열림.");
-    }
-
-    public void CloseShop()
-    {
-        if (shopUI == null) return;
-        isOpen = false;
-        shopUI.SetActive(false);
-        Debug.Log("[ShopManager] 상점 닫힘.");
+        {
+            Debug.LogWarning("[ShopManager] DropPoint 또는 SpawnManager가 없어 구매한 아이템을 생성하지 못했습니다.");
+        }
     }
 
     // -----------------------------------------------
-    // 플레이어가 상호작용 키를 눌렀을 때 외부(HitRay 등)에서 호출
+    // SellItemSlot(판매 버튼)에서 호출
     // -----------------------------------------------
-    public void Interact()
+    public void SellItem(GameObject equippedItem, ItemData itemData)
     {
-        ToggleShop();
+        if (equippedItem == null || itemData == null || currentEquips == null) return;
+        if (GoldManager.Instance == null) return;
+
+        for (int i = 0; i < currentEquips.Length; i++)
+        {
+            if (currentEquips[i] == equippedItem)
+            {
+                currentEquips[i] = null;
+                break;
+            }
+        }
+
+        GoldManager.Instance.AddGold(itemData.price);
+        Photon.Pun.PhotonNetwork.Destroy(equippedItem);
+
+        Debug.Log($"[ShopManager] '{itemData.itemName}' 판매 완료.");
+        RefreshSellSlots();
     }
 }
