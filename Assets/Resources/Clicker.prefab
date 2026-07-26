@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2875200144616151047}
   - component: {fileID: 8201700742743685018}
   - component: {fileID: 7792977626929194303}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Object
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -102,7 +102,7 @@ GameObject:
   - component: {fileID: 2523461026369158376}
   - component: {fileID: 77045822698304681}
   - component: {fileID: 8592999168267855051}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Clicker
   m_TagString: Untagged
   m_Icon: {fileID: 0}

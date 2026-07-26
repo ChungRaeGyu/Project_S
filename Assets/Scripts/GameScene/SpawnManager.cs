@@ -5,6 +5,19 @@ public class SpawnManager : MonoBehaviour
 {
     [SerializeField]ItemDatabase itemDatabase;
     [SerializeField] Transform[] spawnPos;
+
+    public static SpawnManager Instance { get; private set; }
+
+    void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {

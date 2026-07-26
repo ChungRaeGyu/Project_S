@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -25,6 +26,9 @@ public class DoorManager : MonoBehaviour
 
     private PieceDoor startDoor = null;
 
+    // 이미 라운드 시작 트리거로 쓰인 문들 - 같은 문이 여러 번 열려도 라운드가 한 번만 넘어가게 함
+    private readonly HashSet<PieceDoor> roundTriggeredDoors = new HashSet<PieceDoor>();
+
     public static DoorManager Instance { get; private set; }
 
     private void Awake()
@@ -43,16 +47,19 @@ public class DoorManager : MonoBehaviour
     public void RegisterStartDoor(PieceDoor door)
     {
         startDoor = door;
-        startDoor.OnOpened += HandleRoundStartDoorOpened;
+        startDoor.OnOpened += () => HandleRoundStartDoorOpened(door);
         RegisterDoor(door, startDoorButtons, ref startIndex, "StartRoom");
     }
 
     // StartRoom 또는 ReadyRoom 문이 열리면(플레이어 상호작용으로) 다음 라운드를 시작한다.
     // RoundManager.RoundStart()가 알아서 "다음" 라운드를 계산하고, 마스터에서만 실제로 동작하므로
     // 여기서 별도 IsMasterClient 체크나 라운드 번호 지정은 불필요.
-    private void HandleRoundStartDoorOpened()
+    // 다만 같은 문이 닫혔다가 다시 열리는 경우가 있으므로, 문 하나당 최초 1회만 트리거되게 막는다.
+    private void HandleRoundStartDoorOpened(PieceDoor door)
     {
-        Debug.Log("[DoorManager] 문이 열려서 다음 라운드를 시작합니다.");
+        if (!roundTriggeredDoors.Add(door)) return;
+
+        Debug.Log($"[DoorManager] '{door.gameObject.name}' 문이 열려서 다음 라운드를 시작합니다.");
         RoundManager.Instance?.RoundStart();
     }
 
@@ -69,7 +76,7 @@ public class DoorManager : MonoBehaviour
     public void RegisterReadyDoor(PieceDoor door)
     {
         // ReadyRoom 문은 안전지대를 나와 다음 Piece(사냥 구역)로 들어가는 문이므로, 열리면 다음 라운드를 시작한다.
-        door.OnOpened += HandleRoundStartDoorOpened;
+        door.OnOpened += () => HandleRoundStartDoorOpened(door);
         RegisterDoor(door, readyDoorButtons, ref readyIndex, "ReadyRoom");
     }
 
@@ -100,6 +107,7 @@ public class DoorManager : MonoBehaviour
         shopIndex = 0;
         readyIndex = 0;
         startDoor = null; // [변경]
+        roundTriggeredDoors.Clear();
 
         ResetButtons(startDoorButtons);
         ResetButtons(pieceDoorButtons);
