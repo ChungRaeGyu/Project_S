@@ -14,6 +14,8 @@ public class CharacterInput : MonoBehaviour
 
     public event Action<int> itemDrop;
 
+    public event Action ecoLocation;
+
     public event Action<InputAction.CallbackContext> OnMouseButton;
     public void InputSetting()
     {
@@ -27,6 +29,15 @@ public class CharacterInput : MonoBehaviour
         inputActions.Character.Test.performed += OnTest;
         inputActions.Character.ItemUse.performed += OnItemUse;
         inputActions.Character.ItemDrop.performed += OnItemDrop;
+        inputActions.Character.EcoLocation.performed += OnEcoLocation;
+    }
+
+    private void OnEcoLocation(InputAction.CallbackContext context)
+    {
+        if (context.phase == InputActionPhase.Performed) 
+        {
+            ecoLocation?.Invoke();
+        }
     }
 
     private void OnItemDrop(InputAction.CallbackContext context)

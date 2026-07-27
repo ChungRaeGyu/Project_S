@@ -68,6 +68,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "EcoLocation",
+                    "type": "Button",
+                    "id": "9fb69c33-cf24-48a7-8fd1-9c8bcc841e08",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -211,6 +220,17 @@
                     "processors": "",
                     "groups": ";KeyBoardMouse",
                     "action": "ItemDrop",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "40b3b960-b82b-4a30-92ba-43ed75c58e93",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";KeyBoardMouse",
+                    "action": "EcoLocation",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
