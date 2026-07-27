@@ -154,6 +154,15 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""EcoLocation"",
+                    ""type"": ""Button"",
+                    ""id"": ""9fb69c33-cf24-48a7-8fd1-9c8bcc841e08"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -299,6 +308,17 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
                     ""action"": ""ItemDrop"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""40b3b960-b82b-4a30-92ba-43ed75c58e93"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";KeyBoardMouse"",
+                    ""action"": ""EcoLocation"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -331,6 +351,7 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
         m_Character_ItemUse = m_Character.FindAction("ItemUse", throwIfNotFound: true);
         m_Character_ItemInteraction = m_Character.FindAction("ItemInteraction", throwIfNotFound: true);
         m_Character_ItemDrop = m_Character.FindAction("ItemDrop", throwIfNotFound: true);
+        m_Character_EcoLocation = m_Character.FindAction("EcoLocation", throwIfNotFound: true);
     }
 
     ~@CharacterInputAction()
@@ -418,6 +439,7 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
     private readonly InputAction m_Character_ItemUse;
     private readonly InputAction m_Character_ItemInteraction;
     private readonly InputAction m_Character_ItemDrop;
+    private readonly InputAction m_Character_EcoLocation;
     /// <summary>
     /// Provides access to input actions defined in input action map "Character".
     /// </summary>
@@ -457,6 +479,10 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Character/ItemDrop".
         /// </summary>
         public InputAction @ItemDrop => m_Wrapper.m_Character_ItemDrop;
+        /// <summary>
+        /// Provides access to the underlying input action "Character/EcoLocation".
+        /// </summary>
+        public InputAction @EcoLocation => m_Wrapper.m_Character_EcoLocation;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -504,6 +530,9 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
             @ItemDrop.started += instance.OnItemDrop;
             @ItemDrop.performed += instance.OnItemDrop;
             @ItemDrop.canceled += instance.OnItemDrop;
+            @EcoLocation.started += instance.OnEcoLocation;
+            @EcoLocation.performed += instance.OnEcoLocation;
+            @EcoLocation.canceled += instance.OnEcoLocation;
         }
 
         /// <summary>
@@ -536,6 +565,9 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
             @ItemDrop.started -= instance.OnItemDrop;
             @ItemDrop.performed -= instance.OnItemDrop;
             @ItemDrop.canceled -= instance.OnItemDrop;
+            @EcoLocation.started -= instance.OnEcoLocation;
+            @EcoLocation.performed -= instance.OnEcoLocation;
+            @EcoLocation.canceled -= instance.OnEcoLocation;
         }
 
         /// <summary>
@@ -638,5 +670,12 @@ public partial class @CharacterInputAction: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnItemDrop(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "EcoLocation" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnEcoLocation(InputAction.CallbackContext context);
     }
 }

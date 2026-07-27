@@ -8,6 +8,7 @@ public class CharacterManager : MonoBehaviour
     CharacterLook characterLook;
     CharacterStat stat;
     FearDimensionController fearDimensionController;
+    Ecorocation eco;
     PhotonView pv;
     private void Awake()
     {
@@ -19,6 +20,7 @@ public class CharacterManager : MonoBehaviour
         characterLook = GetComponent<CharacterLook>();
         stat = GetComponent<CharacterStat>();
         fearDimensionController = GetComponent<FearDimensionController>();
+        eco = GetComponent<Ecorocation>();
         characterBehavior.Init(stat);
         characterInput.InputSetting();
 
@@ -34,6 +36,7 @@ public class CharacterManager : MonoBehaviour
         Interact();
         ItemInteract();
         ItemDrop();
+        characterInput.ecoLocation += eco.OnEcoLocation;
         stat.Onfear += fearDimensionController.EnterDimension;
         characterInput.OnMouseButton += characterBehavior.OnMouseButton;
         stat.StatUpdate();
