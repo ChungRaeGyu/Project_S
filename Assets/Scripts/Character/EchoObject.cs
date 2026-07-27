@@ -26,10 +26,12 @@ public class EchoObject : MonoBehaviour
         render = GetComponent<MeshRenderer>();
 
         block = new MaterialPropertyBlock();
+        SetReveal(1);
     }
 
     public void Reveal()
     {
+        //나중에 눈이 안보이게 됐을때 모든 Manager에 다가 이벤트 걸어놓고 발사 하면 되지 않을까 Reaveal(0)를 해야한다.
         if (revealCoroutine != null)
             StopCoroutine(revealCoroutine);
 
@@ -48,7 +50,7 @@ public class EchoObject : MonoBehaviour
             yield return null;
         }
 
-        SetReveal(0.7f);
+        SetReveal(1);
 
         // 유지
         yield return new WaitForSeconds(visibleDuration);
@@ -70,7 +72,6 @@ public class EchoObject : MonoBehaviour
 
     void SetReveal(float value)
     {
-        value = Mathf.Min(value, 0.7f);
         render.GetPropertyBlock(block);
         block.SetFloat(Alpha, value);
         render.SetPropertyBlock(block);
