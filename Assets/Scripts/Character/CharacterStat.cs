@@ -7,7 +7,7 @@ public class CharacterStat : MonoBehaviour, IDamageable
     //여기서 이제 어떤 장비를 가지고 있는 지 확인하고 
     public GameObject[] equips = new GameObject[2]; //장비
     IInteractable currentInteractable;
-    IItemUse currentItem; //보고 있는 장비
+    GameObject currentItem; //보고 있는 장비
 
     [SerializeField]private int hp = 100;
     public int fear = 3;
@@ -22,11 +22,11 @@ public class CharacterStat : MonoBehaviour, IDamageable
     {
         throw new System.NotImplementedException();
     }
-    public void ChangeItemInteract(IItemUse obj)
+    public void ChangeItemInteract(GameObject obj)
     {
         currentItem = obj;
     }
-    public IItemUse GetcurrentItem()
+    public GameObject GetcurrentItem()
     {
         return currentItem;
     }
