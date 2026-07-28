@@ -70,7 +70,7 @@ Color.red
                 Debug.Log("Interactable이 있음!");
                 changeInteractable?.Invoke(co);
             }
-            else
+            else if(currentCollider.TryGetComponent(out IItemUse item))
             {
                 Debug.Log("Interactable이 없음!" + hit.collider.name);
                 
