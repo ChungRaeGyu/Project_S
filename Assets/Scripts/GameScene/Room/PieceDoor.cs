@@ -20,6 +20,9 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
     [Header("필요 아이템 (비워두면 아이템 없이 상호작용만으로 열림)")]
     [SerializeField] private ItemData requiredItem;
 
+    [Tooltip("체크하면 RoundManager의 현재 라운드 타이머가 끝나기 전까지 상호작용/버튼으로 열 수 없다 (ReadyRoom 문 등)")]
+    [SerializeField] private bool requireRoundTimeUp = false;
+
     // [변경] 슬라이드할 자식 오브젝트
     [Header("슬라이드할 자식 문 오브젝트")]
     [SerializeField] private Transform doorChild;
@@ -29,6 +32,9 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
     private Vector3 openPos;
     private bool isOpen = false;
     private bool isMoving = false;
+
+    // 이 문이 속한 방의 stepIndex. RoomGenerator가 생성 시 SetStepIndex()로 부여한다.
+    private int stepIndex = -1;
 
     // 상호작용 감지용이면서 동시에 문틀을 물리적으로 막는 콜라이더.
     // 최초로 열릴 때 isTrigger를 켜서, 그 이후로는 계속 통과 가능한 상태로 남는다.
@@ -68,15 +74,37 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
         }
     }
 
+    // RoomGenerator가 생성 직후 호출 - 이 문이 속한 방의 순서 번호 부여
+    public void SetStepIndex(int index)
+    {
+        stepIndex = index;
+    }
+
     // -----------------------------------------------
     // 버튼 클릭 시 - RPC로 모든 클라이언트에 전달
     // -----------------------------------------------
+    // 테스트용 버튼 경로는 라운드 타이머 체크를 거치지 않는다 (일부러 언제든 열 수 있게 둠).
     private void OnButtonClick()
     {
         Debug.Log($"[PieceDoor] 버튼 클릭됨. isOpen={isOpen} isMoving={isMoving}");
         if (isOpen || isMoving) return;
 
         photonView.RPC("RPC_OpenDoor", RpcTarget.AllViaServer);
+    }
+
+    // 라운드 타이머가 아직 돌아가는 중이면(시간 안 끝났으면) true - requireRoundTimeUp 체크된 문에만 적용
+    private bool IsBlockedByRoundTimer()
+    {
+        if (!requireRoundTimeUp) return false;
+        if (RoundManager.Instance == null) return false;
+        if (!RoundManager.Instance.IsRoundRunning) return false; // 시간 다 됐으면 당연히 열림
+
+        // 완전 탈락한 플레이어를 제외한 모든 플레이어가 이미 이 방에 모여있으면 시간이 남아있어도 조기 개방
+        if (stepIndex >= 0 && RoundManager.Instance.AreAllActivePlayersInRoom(stepIndex))
+            return false;
+
+        Debug.Log($"[PieceDoor] '{gameObject.name}' 아직 라운드 시간이 남아있어 열 수 없습니다.");
+        return true;
     }
 
     // -----------------------------------------------
@@ -139,6 +167,7 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
     {
         Debug.Log($"[PieceDoor] OnInteract 호출. isOpen={isOpen} isMoving={isMoving}");
         if (isOpen || isMoving) return;
+        if (IsBlockedByRoundTimer()) return;
 
         if (requiredItem != null)
         {

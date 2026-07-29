@@ -189,17 +189,18 @@ public class RoomGenerator : MonoBehaviourPunCallbacks
         {
             spawnedObjects.Add(obj);
 
-            // 문 종류에 따라 DoorManager에 등록 (PieceDoor를 찾아서 전달)
-            if (DoorManager.Instance != null)
+            // 문에 이 방의 순서 번호(stepIndex) 부여 - "다 모였으면 조기 개방" 판정에 필요
+            PieceDoor door = obj.GetComponentInChildren<PieceDoor>();
+            if (door != null)
+                door.SetStepIndex(stepIndex);
+
+            // 문 종류에 따라 DoorManager에 등록
+            if (DoorManager.Instance != null && door != null)
             {
-                PieceDoor door = obj.GetComponentInChildren<PieceDoor>();
-                if (door != null)
-                {
-                    if (doorType == DoorType.Start) DoorManager.Instance.RegisterStartDoor(door);
-                    if (doorType == DoorType.Piece) DoorManager.Instance.RegisterPieceDoor(door);
-                    if (doorType == DoorType.Shop) DoorManager.Instance.RegisterShopDoor(door);
-                    if (doorType == DoorType.Ready) DoorManager.Instance.RegisterReadyDoor(door);
-                }
+                if (doorType == DoorType.Start) DoorManager.Instance.RegisterStartDoor(door);
+                if (doorType == DoorType.Piece) DoorManager.Instance.RegisterPieceDoor(door);
+                if (doorType == DoorType.Shop) DoorManager.Instance.RegisterShopDoor(door);
+                if (doorType == DoorType.Ready) DoorManager.Instance.RegisterReadyDoor(door);
             }
 
             // [변경] RoomTrigger에 이 방의 순서 번호(stepIndex) 부여

@@ -26,6 +26,9 @@ public class RoundManager : MonoBehaviourPun
     public int CurrentRound { get; private set; } = 0;
     public float RemainingTime { get; private set; } = 0f;
 
+    // 라운드 타이머가 아직 카운트다운 중인지. PieceDoor가 "시간 끝나기 전엔 못 열게" 체크할 때 사용.
+    public bool IsRoundRunning => isRunning;
+
     private bool isRunning = false;
 
     // 플레이어별 현재 위치한 방의 stepIndex (map에 없으면 기본값 0으로 간주 = StartRoom)
@@ -199,6 +202,38 @@ public class RoundManager : MonoBehaviourPun
             // 현재 라운드 Piece방의 stepIndex 이하에 머물러 있으면 처리
             if (currentStep <= targetStep)
                 OnRoundTimeUp(player);
+        }
+    }
+
+    // -----------------------------------------------
+    // 완전 탈락(사망)한 플레이어를 제외한 모든 활성 플레이어가 특정 방(stepIndex)에 있는지 확인.
+    // PieceDoor가 "라운드 시간 안 끝나도 다 모였으면 조기 개방"에 사용.
+    // -----------------------------------------------
+    public bool AreAllActivePlayersInRoom(int stepIndex)
+    {
+        foreach (GameObject player in allPlayers)
+        {
+            if (IsPlayerEliminated(player)) continue;
+
+            int currentStep = playerStepMap.ContainsKey(player) ? playerStepMap[player] : 0;
+            if (currentStep != stepIndex) return false;
+        }
+        return true;
+    }
+
+    // 체력/사망 시스템이 아직 구현 전(IsDead가 NotImplementedException)이면 "탈락 아님"으로 안전하게 처리.
+    private bool IsPlayerEliminated(GameObject player)
+    {
+        IDamageable damageable = player.GetComponent<IDamageable>();
+        if (damageable == null) return false;
+
+        try
+        {
+            return damageable.IsDead;
+        }
+        catch (System.NotImplementedException)
+        {
+            return false;
         }
     }
 
