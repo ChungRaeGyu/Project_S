@@ -17,14 +17,17 @@ public class FearDimensionController : MonoBehaviour
     Vector3 realWorldPosition;
     Quaternion realWorldRotation;
     UnknownWorld preloadedWorld;
+    PhotonView pv;
+    string realWorldTag;
 
     public bool IsInDimension { get; private set; }
 
     void Awake()
     {
+        pv = GetComponent<PhotonView>();
+
         // 내 캐릭터가 아니면(다른 플레이어의 복제본) 미리 생성할 필요가 없다.
         // CharacterManager와 동일한 패턴: pv.IsMine이 아니면 이 컴포넌트를 통째로 비활성화.
-        PhotonView pv = GetComponent<PhotonView>();
         if (pv != null && !pv.IsMine)
             enabled = false;
     }
@@ -48,7 +51,12 @@ public class FearDimensionController : MonoBehaviour
         realWorldPosition = transform.position;
         realWorldRotation = transform.rotation;
 
-        SetPositionSyncEnabled(false);
+        SetNetworkSyncEnabled(false);
+
+        // MonsterAI가 "Player" 태그로 씬을 스캔해서 탐지하므로, 태그를 잠깐 빼서
+        // 미지 차원에 있는 동안 던전의 몬스터가 이 플레이어를 아예 인식하지 못하게 한다.
+        realWorldTag = gameObject.tag;
+        gameObject.tag = "Untagged";
 
         preloadedWorld.gameObject.SetActive(true);
         preloadedWorld.Enter(this);
@@ -65,18 +73,15 @@ public class FearDimensionController : MonoBehaviour
         transform.position = realWorldPosition;
         transform.rotation = realWorldRotation;
 
-        SetPositionSyncEnabled(true);
+        gameObject.tag = realWorldTag;
+        SetNetworkSyncEnabled(true);
         IsInDimension = false;
     }
 
-    // 미지 차원에 있는 동안 위치 동기화 컴포넌트를 꺼서, 실제 좌표가 다른 클라이언트에 전파되지 않게 한다.
-    // 프로젝트에서 실제로 쓰는 Photon 뷰 컴포넌트 타입을 확인 후 맞는 쪽만 남기고 정리해도 된다.
-    void SetPositionSyncEnabled(bool value)
+    // 미지 차원에 있는 동안 PhotonView 자체를 꺼서, 위치를 포함한 어떤 것도 다른 클라이언트에 전파되지 않게 한다.
+    void SetNetworkSyncEnabled(bool value)
     {
-        var transformView = GetComponent<Photon.Pun.PhotonTransformView>();
-        if (transformView != null) transformView.enabled = value;
-
-        var rigidbodyView = GetComponent<Photon.Pun.PhotonRigidbodyView>();
-        if (rigidbodyView != null) rigidbodyView.enabled = value;
+        if (pv != null)
+            pv.enabled = value;
     }
 }
