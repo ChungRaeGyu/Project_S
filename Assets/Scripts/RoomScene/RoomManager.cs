@@ -19,4 +19,9 @@ public class RoomManager : MonoBehaviour
         }
 
     }
+
+    private void Update()
+    {
+        
+    }
 }
