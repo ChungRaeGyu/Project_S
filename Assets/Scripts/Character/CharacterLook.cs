@@ -27,8 +27,8 @@ public class CharacterLook : MonoBehaviour
     {
         camera = Camera.main;
         camera.transform.SetParent(cameraPivot);
-        camera.transform.position = transform.position + new Vector3(0, 1, 0);
-        camera.transform.rotation = Quaternion.identity;
+        camera.transform.localPosition = new Vector3(0, 0, 0);
+        camera.transform.localRotation = Quaternion.identity;
     }
     public void UpdateLook(Vector2 mouseDelta)
     {
