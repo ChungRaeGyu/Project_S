@@ -84,8 +84,9 @@ public class CharacterBehavior : MonoBehaviour
     internal void OnChangeCamera()
     {
         //살아있는 애들중에 하나를 골라야한단 말이지
+        if (stat.IsAlive) return;
         var temp = RoundManager.Instance.GetPlayers();
-
+        Debug.Log("변경!");
         foreach (GameObject playerObj in RoundManager.Instance.GetPlayers())
         {
             CharacterManager player = playerObj.GetComponent<CharacterManager>();

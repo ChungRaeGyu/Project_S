@@ -22,6 +22,7 @@ public class SpawnManager : MonoBehaviour
     void Start()
     {
         GameObject obj = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity);
+        obj.gameObject.name = PhotonNetwork.NickName;
         RoundManager.Instance.AddPlayer(obj);
         SpawnStart();
     }
