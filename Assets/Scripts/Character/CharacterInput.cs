@@ -17,6 +17,12 @@ public class CharacterInput : MonoBehaviour
     public event Action ecoLocation;
 
     public event Action<InputAction.CallbackContext> OnMouseButton;
+
+    public event Action OnChangeCamera;
+
+    [SerializeField] private float inputCooldown = 0.2f;
+
+    private float nextInputTime;
     public void InputSetting()
     {
         inputActions = new CharacterInputAction();
@@ -31,7 +37,14 @@ public class CharacterInput : MonoBehaviour
         inputActions.Character.ItemDrop.performed += OnItemDrop;
         inputActions.Character.EcoLocation.performed += OnEcoLocation;
     }
+    private bool CanInput()
+    {
+        if (Time.time < nextInputTime)
+            return false;
 
+        nextInputTime = Time.time + inputCooldown;
+        return true;
+    }
     private void OnEcoLocation(InputAction.CallbackContext context)
     {
         if (context.phase == InputActionPhase.Performed) 
@@ -73,6 +86,8 @@ public class CharacterInput : MonoBehaviour
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
             }
+
+            OnChangeCamera?.Invoke();
         }
     }
 

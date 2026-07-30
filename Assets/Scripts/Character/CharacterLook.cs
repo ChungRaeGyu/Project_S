@@ -9,7 +9,7 @@ public class CharacterLook : MonoBehaviour
     private float yRotation;
     private float xRotation;
     private Camera camera;
-
+    [SerializeField] private Transform cameraPivot;
     [SerializeField] private float interactDistance = 3f;
     [SerializeField] private LayerMask interactLayer; // Interactable layer
 
@@ -23,12 +23,12 @@ public class CharacterLook : MonoBehaviour
         SetCamera();
     }
 
-    private void SetCamera()
+    public void SetCamera()
     {
         camera = Camera.main;
-        camera.transform.SetParent(transform);
-        camera.transform.position = transform.position + new Vector3(0, 1, 0);
-        camera.transform.rotation = Quaternion.identity;
+        camera.transform.SetParent(cameraPivot);
+        camera.transform.localPosition = new Vector3(0, 0, 0);
+        camera.transform.localRotation = Quaternion.identity;
     }
     public void UpdateLook(Vector2 mouseDelta)
     {
@@ -47,7 +47,7 @@ public class CharacterLook : MonoBehaviour
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, minXRotation, maxXRotation);
 
-        camera.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        cameraPivot.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
     }
 
     public void CheckInteractable()

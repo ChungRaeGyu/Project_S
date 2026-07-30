@@ -70,7 +70,7 @@ public class EchoObject : MonoBehaviour
         revealCoroutine = null;
     }
 
-    void SetReveal(float value)
+    public void SetReveal(float value)
     {
         render.GetPropertyBlock(block);
         block.SetFloat(Alpha, value);
