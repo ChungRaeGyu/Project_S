@@ -310,7 +310,9 @@ public class MonsterAI : MonoBehaviourPun
         agent.isStopped = false;
         agent.speed = patrolSpeed;
 
-        roundEndedSignal = false;
+        // roundEndedSignal은 여기서 리셋하지 않는다. 몬스터가 Chase/Berserk 등 Patrol이 아닌 상태일 때
+        // 라운드가 끝나면 신호가 true로 남아있어야, 나중에 Patrol로 돌아왔을 때 그걸 감지하고
+        // 다음 구역으로 넘어갈 수 있다 (실제로 소비하는 아래 지점에서만 false로 리셋한다).
         float fallbackRoundTimer = 0f;
         float berserkRechargeTimer = 0f;
         GoToNextPatrolPoint();
@@ -359,6 +361,7 @@ public class MonsterAI : MonoBehaviourPun
 
             if (roundOver)
             {
+                roundEndedSignal = false; // 소비했으니 리셋 - 다음 라운드 종료 신호와 안 섞이게
                 ChangeState(MonsterState.ZoneSearch);
                 yield break;
             }

@@ -76,6 +76,11 @@ public class FearDimensionController : MonoBehaviour
         gameObject.tag = realWorldTag;
         SetNetworkSyncEnabled(true);
         IsInDimension = false;
+
+        // 미지 차원에 있는 동안 라운드 타이머가 끝나서 페널티(텔레포트)가 적용됐어도,
+        // 방금 위에서 realWorldPosition으로 되돌렸기 때문에 그 페널티가 무효화됐을 수 있다.
+        // 복귀 시점에 "아직도 뒤처져 있는지" 다시 확인해서 필요하면 페널티를 재적용한다.
+        RoundManager.Instance?.CheckLateAfterDimensionReturn(gameObject);
     }
 
     // 미지 차원에 있는 동안 PhotonView 자체를 꺼서, 위치를 포함한 어떤 것도 다른 클라이언트에 전파되지 않게 한다.

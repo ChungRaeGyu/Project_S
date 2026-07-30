@@ -67,6 +67,13 @@ public class RoomGenerator : MonoBehaviourPunCallbacks
         return roomsByStepIndex.TryGetValue(stepIndex, out GameObject room) ? room : null;
     }
 
+    // PieceDoor.RPC_SetStepIndex가 모든 클라이언트에서 각자 호출 - 이 클라이언트의 로컬 매핑에 등록.
+    // (방 생성 코루틴 자체는 마스터에서만 도므로, 클라이언트는 이 경로로만 자기 roomsByStepIndex를 채울 수 있다.)
+    public void RegisterRoomByStepIndex(int index, GameObject room)
+    {
+        roomsByStepIndex[index] = room;
+    }
+
     // 문이 열리거나 닫혀서 통로 상태가 바뀔 때마다 호출 - 마스터에서만 실제로 다시 굽는다.
     // (MonsterAI가 마스터에서만 동작하므로 이 갱신도 마스터에서만 의미 있음)
     public void RebuildNavMesh()

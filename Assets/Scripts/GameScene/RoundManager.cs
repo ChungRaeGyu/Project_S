@@ -23,6 +23,9 @@ public class RoundManager : MonoBehaviourPun
     [Tooltip("같은 플레이어가 라운드 시간 초과를 두 번째 이상 겪으면 켜지는 검은 화면 패널")]
     [SerializeField] private GameObject blackScreenPanel;
 
+    [Tooltip("탈락(사망)하지 않은 모든 플레이어가 EndRoom에 모이면 띄울 UI 이미지")]
+    [SerializeField] private GameObject endRoomClearImage;
+
     public int CurrentRound { get; private set; } = 0;
     public float RemainingTime { get; private set; } = 0f;
 
@@ -39,6 +42,9 @@ public class RoundManager : MonoBehaviourPun
 
     // 라운드 시간 초과로 처리된 적 있는 플레이어 집합 - 최초 1회는 텔레포트, 그다음부터는 검은 화면
     private readonly HashSet<GameObject> hasBeenLateOnce = new HashSet<GameObject>();
+
+    // EndRoom 클리어 UI를 이미 띄웠는지 - 중복 RPC 방지
+    private bool endRoomCleared = false;
 
     // [변경] 라운드 번호 -> 해당 라운드 Piece방의 stepIndex
     // RoomGenerator가 생성 완료 후 채워줌
@@ -66,6 +72,9 @@ public class RoundManager : MonoBehaviourPun
     {
         if (blackScreenPanel != null)
             blackScreenPanel.SetActive(false);
+
+        if (endRoomClearImage != null)
+            endRoomClearImage.SetActive(false);
     }
 
     private void Update()
@@ -99,13 +108,33 @@ public class RoundManager : MonoBehaviourPun
     }
 
     // -----------------------------------------------
-    // [변경] RoomGenerator가 맵 생성 완료 후 호출 - 라운드별 Piece stepIndex 전달
+    // RoomGenerator가 맵 생성 완료 후 호출 (마스터에서만 실행됨).
+    // RoomGenerator의 방 생성 코루틴 자체가 마스터에서만 도는데, 여기서 로컬로만 채우면
+    // 클라이언트의 roundToPieceStep은 영원히 비어있게 되어 HandleTimeUp()이 매번 조용히 실패한다
+    // (라운드가 끝나도 마스터만 이동하고 클라이언트는 그대로 남는 버그의 원인이었다).
+    // 그래서 RPC로 모든 클라이언트에 매핑을 전파한다.
     // -----------------------------------------------
     public void SetRoundPieceStepMap(Dictionary<int, int> map)
     {
-        roundToPieceStep.Clear();
+        int[] rounds = new int[map.Count];
+        int[] steps = new int[map.Count];
+        int i = 0;
         foreach (var kv in map)
-            roundToPieceStep[kv.Key] = kv.Value;
+        {
+            rounds[i] = kv.Key;
+            steps[i] = kv.Value;
+            i++;
+        }
+
+        photonView.RPC("RPC_SetRoundPieceStepMap", RpcTarget.AllViaServer, rounds, steps);
+    }
+
+    [PunRPC]
+    private void RPC_SetRoundPieceStepMap(int[] rounds, int[] steps)
+    {
+        roundToPieceStep.Clear();
+        for (int i = 0; i < rounds.Length; i++)
+            roundToPieceStep[rounds[i]] = steps[i];
 
         Debug.Log($"[RoundManager] 라운드-Piece stepIndex 매핑 수신 완료. (총 {roundToPieceStep.Count}개)");
     }
@@ -200,6 +229,10 @@ public class RoundManager : MonoBehaviourPun
 
         foreach (GameObject player in allPlayers)
         {
+            // 미지 차원에 있는 동안은 이 체크를 무시한다 - 어차피 ExitDimension()이 위치를 되돌려버려서
+            // 지금 패널티를 적용해도 무효화된다. 대신 CheckLateAfterDimensionReturn()이 복귀 시점에 한 번만 체크한다.
+            if (IsInDimension(player)) continue;
+
             // map에 없으면 기본값 0 (StartRoom)으로 간주
             int currentStep = playerStepMap.ContainsKey(player) ? playerStepMap[player] : 0;
 
@@ -207,6 +240,12 @@ public class RoundManager : MonoBehaviourPun
             if (currentStep <= targetStep)
                 OnRoundTimeUp(player);
         }
+    }
+
+    private bool IsInDimension(GameObject player)
+    {
+        FearDimensionController fdc = player.GetComponent<FearDimensionController>();
+        return fdc != null && fdc.IsInDimension;
     }
 
     // -----------------------------------------------
@@ -226,7 +265,7 @@ public class RoundManager : MonoBehaviourPun
     }
 
     // 체력/사망 시스템이 아직 구현 전(IsDead가 NotImplementedException)이면 "탈락 아님"으로 안전하게 처리.
-    private bool IsPlayerEliminated(GameObject player)
+    public bool IsPlayerEliminated(GameObject player)
     {
         IDamageable damageable = player.GetComponent<IDamageable>();
         if (damageable == null) return false;
@@ -239,6 +278,45 @@ public class RoundManager : MonoBehaviourPun
         {
             return false;
         }
+    }
+
+    // -----------------------------------------------
+    // EndRoomTrigger가 마스터에서만 호출 - 탈락(사망)하지 않은 모든 플레이어가 EndRoom에 모였을 때 알림.
+    // 각 클라이언트가 독립적으로 판정하면 중복 호출/타이밍이 어긋날 수 있어서 마스터가 한 번 판정하고
+    // RPC로 전체 클라이언트에 UI 표시를 전파한다.
+    // -----------------------------------------------
+    public void NotifyAllPlayersReachedEndRoom()
+    {
+        if (endRoomCleared) return;
+        endRoomCleared = true;
+
+        photonView.RPC("RPC_ShowEndRoomClearUI", RpcTarget.All);
+    }
+
+    [PunRPC]
+    private void RPC_ShowEndRoomClearUI()
+    {
+        if (endRoomClearImage != null)
+            endRoomClearImage.SetActive(true);
+    }
+
+    // -----------------------------------------------
+    // FearDimensionController.ExitDimension()이 미지 차원에서 돌아온 직후 호출한다.
+    // 미지 차원에 있는 동안 라운드가 끝나서 HandleTimeUp()이 이 플레이어에게 페널티(텔레포트)를
+    // 적용했더라도, ExitDimension()이 그 직후 realWorldPosition(미지 차원 들어가기 직전 위치)으로
+    // 강제로 되돌리기 때문에 그 페널티 이동이 조용히 무효화될 수 있다. 그래서 돌아온 시점에
+    // "라운드가 이미 끝났는데 아직도 뒤처져 있는지"를 다시 한번 확인해서 필요하면 페널티를 재적용한다.
+    // -----------------------------------------------
+    public void CheckLateAfterDimensionReturn(GameObject player)
+    {
+        if (isRunning) return;   // 라운드가 아직 진행 중이면(안 끝났으면) 해당 없음
+        if (CurrentRound <= 0) return; // 라운드가 아직 한 번도 시작 안 했으면 해당 없음
+
+        if (!roundToPieceStep.TryGetValue(CurrentRound, out int targetStep)) return;
+
+        int currentStep = playerStepMap.ContainsKey(player) ? playerStepMap[player] : 0;
+        if (currentStep <= targetStep)
+            OnRoundTimeUp(player);
     }
 
     // -----------------------------------------------

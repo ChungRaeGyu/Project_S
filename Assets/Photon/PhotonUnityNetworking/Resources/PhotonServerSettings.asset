@@ -43,6 +43,9 @@ MonoBehaviour:
   - RPC_RoundStart
   - RPC_SyncState
   - RPC_Activate
+  - RPC_SetRoundPieceStepMap
+  - RPC_SetStepIndex
+  - RPC_ShowEndRoomClearUI
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 0

@@ -37,6 +37,11 @@ public class CharacterLook : MonoBehaviour
     }
     private void Look(Vector2 mouseDelta)
     {
+        // 상점 등 클릭이 필요한 UI가 열려서 커서가 풀려있는 동안(CursorLockMode.None)은 시점 회전을 멈춘다.
+        // 그런 UI들은 열릴 때 Cursor.lockState를 직접 바꾸므로(예: ShopManager.Open/Close), 여기서
+        // 그 값만 확인하면 앞으로 추가되는 다른 UI에도 별도 연결 없이 똑같이 적용된다.
+        if (Cursor.lockState != CursorLockMode.Locked) return;
+
         float mouseX = mouseDelta.x * mouseSensitivity;
         float mouseY = mouseDelta.y * mouseSensitivity;
         // 좌우 회전: 캐릭터 몸통이 회전

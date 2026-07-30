@@ -85,10 +85,29 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
         }
     }
 
-    // RoomGenerator가 생성 직후 호출 - 이 문이 속한 방의 순서 번호 부여
+    // RoomGenerator가 생성 직후(마스터에서만) 호출 - 이 문이 속한 방의 순서 번호 부여.
+    // RoomGenerator의 방 생성 코루틴 자체가 마스터에서만 실행되므로, 여기서 로컬로만 값을 설정하면
+    // 클라이언트의 stepIndex/RoomTrigger.StepIndex/RoomGenerator.roomsByStepIndex가 전부 비어있게 되어
+    // "라운드 끝나도 마스터만 이동하고 클라이언트는 그대로 남는" 버그가 생긴다. 그래서 RPC로 전파한다.
     public void SetStepIndex(int index)
     {
+        photonView.RPC("RPC_SetStepIndex", RpcTarget.AllViaServer, index);
+    }
+
+    [PunRPC]
+    private void RPC_SetStepIndex(int index)
+    {
         stepIndex = index;
+
+        // 같은 방 안의 RoomTrigger에도 동일한 stepIndex 전달 (플레이어 위치 추적용) - RoomTrigger는
+        // PhotonView가 없는 순수 로컬 컴포넌트라 이 RPC 콜백을 통해서만 클라이언트마다 값을 채울 수 있다.
+        RoomTrigger trigger = transform.root.GetComponentInChildren<RoomTrigger>();
+        if (trigger != null)
+            trigger.SetStepIndex(index);
+
+        // 이 클라이언트 자신의 RoomGenerator에도 "stepIndex -> 방 오브젝트" 매핑을 등록
+        if (RoomGenerator.Instance != null)
+            RoomGenerator.Instance.RegisterRoomByStepIndex(index, transform.root.gameObject);
     }
 
     // -----------------------------------------------
