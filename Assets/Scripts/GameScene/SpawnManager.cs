@@ -23,7 +23,6 @@ public class SpawnManager : MonoBehaviour
     {
         GameObject obj = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity);
         obj.gameObject.name = PhotonNetwork.NickName;
-        RoundManager.Instance.AddPlayer(obj);
         SpawnStart();
     }
     //아이템 스폰도 적어놓을까

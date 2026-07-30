@@ -16,6 +16,7 @@ public class CharacterManager : MonoBehaviour
         characterLook = GetComponent<CharacterLook>();
         stat = GetComponent<CharacterStat>();
 
+        RoundManager.Instance.AddPlayer(this.gameObject);
         if (!pv.IsMine) { this.enabled = false; return; }
         characterInput = GetComponent<CharacterInput>();
         characterBehavior = GetComponent<CharacterBehavior>();
