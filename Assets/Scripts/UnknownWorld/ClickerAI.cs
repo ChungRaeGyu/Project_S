@@ -57,6 +57,18 @@ public class ClickerAI : MonoBehaviour
         stateRoutine = StartCoroutine(Wander());
     }
 
+    // UnknownWorld.Leave()가 Destroy() 하기 직전에 호출한다.
+    // Destroy() 시점에 NavMeshAgent가 NavMesh에서 즉시 분리되는데, 코루틴이 그 다음 틱에
+    // agent.remainingDistance 등을 계속 읽으려다 "NavMesh에 없는 에이전트" 예외가 나는 걸 막는다.
+    public void StopChasing()
+    {
+        if (stateRoutine != null)
+        {
+            StopCoroutine(stateRoutine);
+            stateRoutine = null;
+        }
+    }
+
     IEnumerator Wander()
     {
         state = State.Wander;
@@ -65,6 +77,8 @@ public class ClickerAI : MonoBehaviour
 
         while (state == State.Wander)
         {
+            if (!agent.isOnNavMesh) yield break;
+
             if (!agent.pathPending && agent.remainingDistance < 0.5f)
                 GoToNextWanderPoint();
 
@@ -88,6 +102,8 @@ public class ClickerAI : MonoBehaviour
 
         while (state == State.Chase)
         {
+            if (!agent.isOnNavMesh) yield break;
+
             TrySetDestination(player.position);
 
             attackTimer -= Time.deltaTime;

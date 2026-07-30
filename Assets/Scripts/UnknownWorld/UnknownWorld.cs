@@ -52,7 +52,12 @@ public class UnknownWorld : MonoBehaviour
     public void Leave()
     {
         if (activeClicker != null)
+        {
+            // Destroy() 시점에 NavMeshAgent가 즉시 NavMesh에서 분리되므로, 코루틴이 그 다음 틱에
+            // remainingDistance 등을 읽으려다 예외가 나지 않도록 파괴 전에 먼저 멈춘다.
+            activeClicker.StopChasing();
             Destroy(activeClicker.gameObject);
+        }
         activeClicker = null;
     }
 }
