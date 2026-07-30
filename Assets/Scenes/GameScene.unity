@@ -898,8 +898,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShopManager
   shopUI: {fileID: 753639924}
-  buyGridContent: {fileID: 0}
-  buySlotPrefab: {fileID: 0}
+  buyGridContent: {fileID: 2129278947}
+  buySlotPrefab: {fileID: 7333134542278843002, guid: 481020d7bc49c9041915674d129b8a7e, type: 3}
   sellGridContent: {fileID: 0}
   sellSlotPrefab: {fileID: 0}
 --- !u!1 &753639924
@@ -3126,7 +3126,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1524391466
 RectTransform:
   m_ObjectHideFlags: 0

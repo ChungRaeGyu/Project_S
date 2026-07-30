@@ -43,12 +43,13 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
     // 이 문이 열리기 시작할 때 발생 (예: DoorManager가 StartRoom 문에 구독해서 라운드 시작 트리거로 사용)
     public event System.Action OnOpened;
 
-    // -----------------------------------------------
-    // DoorManager에서 호출 - 버튼 연결 및 위치 초기화
-    // -----------------------------------------------
-    public void Init(Button button)
+    // Init()은 RoomGenerator -> DoorManager 등록 경로를 통해서만 호출되는데, 그 경로는 마스터에서만 실행된다.
+    // closedPos/openPos/doorCollider는 모든 클라이언트에서 각자 필요하므로(RPC로 문 여닫힘이 전체 동기화되니까),
+    // 마스터 전용 경로에 의존하지 않고 오브젝트가 생성되는 모든 클라이언트에서 실행되는 Awake()에서 초기화한다.
+    // (예전엔 Init()에서만 계산해서, 클라이언트에서는 closedPos/openPos가 기본값(0,0,0)으로 남아
+    //  문이 열릴 때 방 중앙(월드 원점)으로 순간이동하는 버그가 있었다.)
+    void Awake()
     {
-        // [변경] 자식 기준으로 위치 초기화
         if (doorChild != null)
         {
             closedPos = doorChild.position;
@@ -60,7 +61,13 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
         }
 
         doorCollider = GetComponent<BoxCollider>();
+    }
 
+    // -----------------------------------------------
+    // DoorManager에서 호출 - 버튼 연결
+    // -----------------------------------------------
+    public void Init(Button button)
+    {
         linkedButton = button;
 
         if (linkedButton != null)
