@@ -5,20 +5,20 @@ public class CharacterManager : MonoBehaviour
 {
     CharacterInput characterInput;
     CharacterBehavior characterBehavior;
-    CharacterLook characterLook;
-    CharacterStat stat;
+    [HideInInspector] public CharacterLook characterLook;
+    [HideInInspector] public CharacterStat stat;
     FearDimensionController fearDimensionController;
     Ecorocation eco;
     PhotonView pv;
     private void Awake()
     {
         pv = GetComponent<PhotonView>();
+        characterLook = GetComponent<CharacterLook>();
+        stat = GetComponent<CharacterStat>();
 
         if (!pv.IsMine) { this.enabled = false; return; }
         characterInput = GetComponent<CharacterInput>();
         characterBehavior = GetComponent<CharacterBehavior>();
-        characterLook = GetComponent<CharacterLook>();
-        stat = GetComponent<CharacterStat>();
         fearDimensionController = GetComponent<FearDimensionController>();
         eco = GetComponent<Ecorocation>();
         characterBehavior.Init(stat);
@@ -39,6 +39,7 @@ public class CharacterManager : MonoBehaviour
         characterInput.ecoLocation += eco.OnEcoLocation;
         stat.Onfear += fearDimensionController.EnterDimension;
         characterInput.OnMouseButton += characterBehavior.OnMouseButton;
+        characterInput.OnChangeCamera += characterBehavior.OnChangeCamera;
         stat.StatUpdate();
     }
     private void FixedUpdate()

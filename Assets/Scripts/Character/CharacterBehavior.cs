@@ -1,4 +1,6 @@
 using Photon.Pun;
+using Photon.Pun.Demo.PunBasics;
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -76,6 +78,22 @@ public class CharacterBehavior : MonoBehaviour
         {
             PhotonNetwork.Destroy(stat.equips[num]);
             stat.equips[num] = null;
+        }
+    }
+
+    internal void OnChangeCamera()
+    {
+        //살아있는 애들중에 하나를 골라야한단 말이지
+        var temp = RoundManager.Instance.GetPlayers();
+
+        foreach (GameObject playerObj in RoundManager.Instance.GetPlayers())
+        {
+            CharacterManager player = playerObj.GetComponent<CharacterManager>();
+            if (!player.stat.IsAlive)
+                continue;
+
+            player.characterLook.SetCamera();
+            break;
         }
     }
 }

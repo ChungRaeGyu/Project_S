@@ -15,6 +15,8 @@ public class CharacterStat : MonoBehaviour, IDamageable
     [SerializeField] int fearmount = 1;
     public event Action Onfear;
 
+    public bool IsAlive = true;
+
     [SerializeField] private int deadCount = 0;
     
     public float speed = 10f;
@@ -73,6 +75,7 @@ public class CharacterStat : MonoBehaviour, IDamageable
                     yield return null;
                 }
             }
+            IsAlive = false;
         }
         deadCount++;
     }

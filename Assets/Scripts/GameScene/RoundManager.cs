@@ -151,6 +151,10 @@ public class RoundManager : MonoBehaviourPun
             Debug.Log($"[RoundManager] '{player.name}' 플레이어 추가.");
         }
     }
+    public List<GameObject> GetPlayers()
+    {
+        return allPlayers;
+    }
 
     public void RemovePlayer(GameObject player)
     {
