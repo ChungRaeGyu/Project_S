@@ -36,8 +36,12 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
     // 이 문이 속한 방의 stepIndex. RoomGenerator가 생성 시 SetStepIndex()로 부여한다.
     private int stepIndex = -1;
 
-    // 상호작용 감지용이면서 동시에 문틀을 물리적으로 막는 콜라이더.
-    // 최초로 열릴 때 isTrigger를 켜서, 그 이후로는 계속 통과 가능한 상태로 남는다.
+    // 문은 이중 구조다: doorChild(보이는 문짝, RPC로 전체 클라이언트에 슬라이드 동기화)와
+    // doorCollider(안 보이는 문틀 콜라이더, 물리적으로 통행을 막음 - 부모 오브젝트에 있음).
+    // doorCollider.isTrigger는 절대 RPC로 동기화하지 않고 각 클라이언트가 로컬로만 관리한다.
+    // 그래서 requiredItem이 있는 문은: 문짝이 열리는 건 다같이 보이지만(RPC), 실제로 통과 가능한지는
+    // "본인이 그 상호작용에서 아이템 체크를 통과해서 OnInteract()가 이 줄까지 왔는가"에 달려있다 -
+    // 즉 아이템 없는 플레이어는 자기 화면에서 doorCollider.isTrigger가 계속 false로 남아 못 지나간다.
     private BoxCollider doorCollider;
 
     // 이 문이 열리기 시작할 때 발생 (예: DoorManager가 StartRoom 문에 구독해서 라운드 시작 트리거로 사용)
@@ -189,7 +193,8 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
             PhotonNetwork.Destroy(matchedItem);
         }
 
-        // 최초로 열릴 때 트리거로 전환해서 그 이후로는 계속 통과 가능하게 한다
+        // 여기 도달했다는 건 이 클라이언트에서 아이템 체크(위)를 통과했다는 뜻이므로,
+        // "이 클라이언트에서만" 통과 가능하게 로컬로 트리거 전환한다 (다른 클라이언트에는 전파 안 됨).
         if (doorCollider != null)
             doorCollider.isTrigger = true;
 
