@@ -13,6 +13,9 @@ public class ClickerAI : MonoBehaviour
     [Header("이동 범위")]
     public Transform[] wanderPoints;
 
+    [Tooltip("wanderPoints가 비어있을 때, 현재 위치 주변 이 반경 안에서 NavMesh 위 무작위 지점으로 배회한다")]
+    public float wanderRadius = 8f;
+
     [Header("Speed")]
     public float wanderSpeed = 2f;
     public float chaseSpeed = 5f;
@@ -130,9 +133,18 @@ public class ClickerAI : MonoBehaviour
 
     void GoToNextWanderPoint()
     {
-        if (wanderPoints == null || wanderPoints.Length == 0) return;
-        agent.SetDestination(wanderPoints[wanderIndex].position);
-        wanderIndex = (wanderIndex + 1) % wanderPoints.Length;
+        if (wanderPoints != null && wanderPoints.Length > 0)
+        {
+            agent.SetDestination(wanderPoints[wanderIndex].position);
+            wanderIndex = (wanderIndex + 1) % wanderPoints.Length;
+            return;
+        }
+
+        // 지정된 배회 지점이 없으면 현재 위치 주변 NavMesh에서 무작위 지점을 샘플링한다
+        // (wanderPoints를 안 채워도 최소한 가만히 서있지는 않게 하는 폴백).
+        Vector3 randomPoint = transform.position + Random.insideUnitSphere * wanderRadius;
+        if (NavMesh.SamplePosition(randomPoint, out NavMeshHit hit, wanderRadius, NavMesh.AllAreas))
+            agent.SetDestination(hit.position);
     }
 
     bool TrySetDestination(Vector3 worldPosition) => AiPerception.TrySetDestination(agent, worldPosition);

@@ -44,6 +44,10 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
     // 즉 아이템 없는 플레이어는 자기 화면에서 doorCollider.isTrigger가 계속 false로 남아 못 지나간다.
     private BoxCollider doorCollider;
 
+    // doorCollider와 같은 오브젝트에 붙어있는 반투명 벽 메시. isTrigger가 로컬로 켜질 때
+    // (이 클라이언트가 통과 가능해질 때) 같이 로컬로 꺼줘야 안 보이는 게 맞다.
+    private Renderer wallRenderer;
+
     // 이 문이 열리기 시작할 때 발생 (예: DoorManager가 StartRoom 문에 구독해서 라운드 시작 트리거로 사용)
     public event System.Action OnOpened;
 
@@ -65,6 +69,7 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
         }
 
         doorCollider = GetComponent<BoxCollider>();
+        wallRenderer = GetComponent<Renderer>();
     }
 
     // -----------------------------------------------
@@ -216,6 +221,10 @@ public class PieceDoor : MonoBehaviourPun, IInteractable
         // "이 클라이언트에서만" 통과 가능하게 로컬로 트리거 전환한다 (다른 클라이언트에는 전파 안 됨).
         if (doorCollider != null)
             doorCollider.isTrigger = true;
+
+        // 반투명 벽도 같이 로컬로 꺼준다 - 통과 가능해졌는데 벽이 계속 보이면 안 되니까.
+        if (wallRenderer != null)
+            wallRenderer.enabled = false;
 
         photonView.RPC("RPC_OpenDoor", RpcTarget.AllViaServer);
     }
