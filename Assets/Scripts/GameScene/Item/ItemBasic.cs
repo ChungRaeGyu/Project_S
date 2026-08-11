@@ -8,8 +8,14 @@ public class ItemBasic : MonoBehaviour,IItemUse
     protected GameObject player;
     public virtual void Use()
     {
-        Debug.Log("아이템 사용");
-        PhotonNetwork.Destroy(this.gameObject);
+        if (itemData.canUse)
+        {
+            PhotonNetwork.Destroy(this.gameObject);
+        }
+        else
+        {
+            Debug.Log("사용할 수 있는 아이템이 아닙니다.");
+        }
     }
     private void SetPosition()
     {
@@ -26,5 +32,10 @@ public class ItemBasic : MonoBehaviour,IItemUse
         this.num = num;
         this.player = player;
         SetPosition();
+    }
+    public void Used()
+    {
+        // 아이템 사용 후 제거
+        PhotonNetwork.Destroy(this.gameObject);
     }
 }

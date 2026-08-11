@@ -15,6 +15,7 @@ public class ItemData : ScriptableObject
     public int    price;        // 구매 가격 (골드)
     public Sprite icon;         // 아이템 아이콘 이미지
 
+    public bool canUse;
     public Vector3[] position;
     public Vector3[] rotation;
 }

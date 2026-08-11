@@ -100,10 +100,10 @@ GameObject:
   m_Component:
   - component: {fileID: 4795103266929829683}
   - component: {fileID: 2999063983655357460}
-  - component: {fileID: 3705929364985934142}
   - component: {fileID: 4461762239300756507}
   - component: {fileID: -3007181554210727796}
   - component: {fileID: -1801469058128811493}
+  - component: {fileID: -2864382392397959228}
   m_Layer: 3
   m_Name: KeyCard
   m_TagString: Item
@@ -154,19 +154,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &3705929364985934142
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5998676538343518410}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 404ab0e25f4b9804b990f9ee4e4a78e5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::KeyCard
-  itemData: {fileID: 11400000, guid: 5beaf2fe349e20c458854a6c34cc0b9d, type: 2}
 --- !u!65 &4461762239300756507
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -206,7 +193,8 @@ MonoBehaviour:
   Synchronization: 3
   OwnershipTransfer: 0
   observableSearch: 2
-  ObservedComponents: []
+  ObservedComponents:
+  - {fileID: -1801469058128811493}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
@@ -226,3 +214,16 @@ MonoBehaviour:
   m_SynchronizeRotation: 1
   m_SynchronizeScale: 0
   m_UseLocal: 1
+--- !u!114 &-2864382392397959228
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5998676538343518410}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9f9586412aa59d47846696692def030, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ItemBasic
+  itemData: {fileID: 11400000, guid: 5beaf2fe349e20c458854a6c34cc0b9d, type: 2}
